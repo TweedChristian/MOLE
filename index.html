@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MOLE</title>
+    <script src="index.js"></script>
+    <script src="lib/webgl-utils.js"></script>
+    <script src="lib/initShaders.js"></script>
+    <script src="lib/MV.js"></script>
+
+    <script id="vshader" type="x-shader/x-vertex">
+    attribute vec4 vPosition;
+    attribute vec4 vColor;
+    uniform mat4 modelMatrix;
+    uniform mat4 projectionMatrix;
+    uniform mat4 viewMatrix;
+    varying vec4 fColor;
+	void main() {
+		gl_Position =  projectionMatrix * viewMatrix * modelMatrix * vPosition;
+		fColor = vColor;
+  	}
+	</script>
+
+    <script id="fshader" type="x-shader/x-fragment">
+	precision mediump float;
+	varying vec4 fColor;
+	void main()
+	{
+		gl_FragColor = fColor;
+  	}
+	</script>
+</head>
+
+<body onload="main()">
+    <canvas id="Canvas" width="400" height="400">Please use an updated browser that can handle the canvas tag</canvas>
+</body>
+
+</html>
