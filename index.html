@@ -33,7 +33,22 @@
 </head>
 
 <body onload="main()">
-    <canvas id="Canvas" width="400" height="400">Please use an updated browser that can handle the canvas tag</canvas>
+    <h1 style="text-align: center;">Pathfinding</h1>
+    <div>
+        <form>
+            <p>Add Obstacle:</p>
+            x: <input type="text" id="x"><br>
+            y: <input type="text" id="y"><br>
+            z: <input type="text" id="z"><br>
+            length: <input type="text" id="l"><br>
+            width: <input type="text" id="w"><br>
+            height: <input type="text" id="h"><br>
+            <button onclick=addObstacle()>Add</button>
+        </form>
+    </div>
+    <div style="width: 100%; text-align: center;">
+    <canvas id="Canvas" width="400" height="400" style="display: inline;">Please use an updated browser that can handle the canvas tag</canvas>
+    </div>
 </body>
 
 </html>

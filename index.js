@@ -1,12 +1,11 @@
-//Model Matrix is moving shit in the scene
-
-
 let modelMat;
 let program;
 let gl;
 
 let points = [];
 let colors = [];
+
+let obstaclePoints = [];
 
 let colorSelection;
 
@@ -18,13 +17,14 @@ function main(){
     if (!gl) {
         console.log("gl didn't work");
     }
-    let projMat = ortho(-3.0, 3.0, -3.0, 3.0, -10, 100);
 
+    let fovy = 30;
+    let projMat = perspective(fovy, 1, .1, 100);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'projectionMatrix'), false, flatten(projMat));
 
     let at = vec3(0.0, 0.0, 0.0);
-    let eyePos = vec3(2.0, 2.0, 10.0);
+    let eyePos = vec3(0.0, 0.0, 20.0);
     let up = vec3(0.0, 1.0, 0.0);
 
     let viewMat = lookAt(eyePos, at, up);
@@ -49,9 +49,11 @@ function main(){
         vec4(0.78,0.082,0.522,1.0)//viored
     ];
 
-    cube();
+ //   cube();
+    parabola(5, 20);
     render();
-    animate();
+    drawParabola();
+   // animate();
 }
 
 function render(){
@@ -77,7 +79,7 @@ let id;
 let theta = 0;
 
 function animate(){
-    theta += 5;
+    theta += 10;
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(rotateY(theta)));
     gl.drawArrays(gl.TRIANGLES, 0, points.length);
@@ -111,3 +113,60 @@ function quad(a, b, c, d) {
         colors.push(colorSelection[a]);
     }
 }
+
+
+function parabola(distance, degreesOfMotion){
+    let segment = distance / 1000;
+    let depth = distance * Math.tan(degreesOfMotion * Math.PI / 180) / 2;
+    let a = 4 * depth / (distance * distance);
+    let b = -4 * depth / distance;    
+    let y;
+    let x;
+    for(let i=0; i< 1000; i++){
+        x = i * segment;
+        y = (a * x * x) + (b * x);
+        points.push(vec4(x, y, 0.0, 1.0));
+        colors.push(colorSelection[5]);
+        x2 = (i+1) * segment;
+        y2 = (a * x2 * x2) + (b * x2);
+        points.push(vec4(x2, y2, 0.0, 1.0));
+        colors.push(colorSelection[5]);
+    }
+}
+
+function drawParabola(){
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(translate(0,0,0)));
+    gl.drawArrays(gl.LINES, 0, points.length);
+}
+
+//For now render obstacles as boxes
+function addObstacle(){
+    let x = document.getElementById("x").value();
+    let y = document.getElementById("y").value();
+    let z = document.getElementById("z").value();
+    let l = document.getElementById("l").value();
+    let w = document.getElementById("w").value();
+    let h = document.getElementById("h").value();
+
+    let minY = y - (h/2);
+    let maxY = y + (h/2);
+    let minX = x - (w/2);
+    let maxX = x + (w/2);
+    let minZ = z - (l/2);
+    let maxZ = z + (l/2);
+
+    let topBackLeft = vec4(minX, maxY, minZ, 1.0); 
+    let topBackRight = vec4(maxX, maxY, minZ, 1.0);
+    let topFrontLeft = vec4(minX, maxY, maxZ, 1.0);
+    let topFrontRight = vec4(maxX, maxY, maxZ, 1.0);
+    let bottomBackLeft = vec4(minX, minY, minZ, 1.0);
+    let bottomBackRight = vec4(maxX, minY, minZ, 1.0);
+    let bottomFrontLeft = vec4(minX, minY, maxZ, 1.0);
+    let bottomFrontRight = vec4(maxX, minY, maxZ, 1.0);
+
+    //Make our triangles
+
+    
+ }
+
