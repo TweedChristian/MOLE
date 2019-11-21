@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" >
+  <head>
+    <title>Test</title>
+  </head>
+  <body>
+    <!-- onkeydown="search(this);" -->
+    <form action="#" onsubmit="testicles(); return false">
+      hello?<br>
+      <input type="number" name="test" id="inputBoxTest" action="#">
+    </form>
+    <div id="buttons">
+      <button type="button" name="button" onclick="buttonPressed();">button</button>
+      <button type="button" name="button2" onclick="button2Pressed();">button2</button>
+      <button type="button" name="button3" onclick="button3Pressed();">button3</button>
+      <button type="button" name="kill" onclick="murder();">Murder circle</button>
+      <button type="button" name="random" onclick="addRandom();">Plot Sin</button>
+      <button type="button" name="stop" onclick="stopButton();" style="background-color: #FF0000;">Stop</button>
+    </div>
+    <div id="dataviz"></div>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script>
+      let dataIndex = 0;
+      let a = new Array();
+      let testData = new Array();
+      let margin = {top: 10, right: 30, bottom: 30, left: 60}
+      let colorScale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0,1]);
+      let intervalFN;
+
+      width = 1000 - margin.left - margin.right,
+      height = 680 - margin.top - margin.bottom;
+
+      let svg = d3.select("#dataviz")
+        .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("trasnform", "translate("+ margin.left + "," + margin.top + ")")
+
+      let hAxis = svg.append('line')
+        .attr("y1", height)
+        .attr("y2", height)
+        .attr('x1', 0)
+        .attr('x2', width)
+        .attr('stroke-width', 2)
+        .attr("stroke", "#FF00FF")
+      const plot = (testData, svg) => {
+        //plot the circles
+        const circle = svg
+          .selectAll("circle")
+          .data(testData)
+        circle
+          .enter()
+          .append("circle")
+          .attr('cy', 0)
+          //.attr('cx', (d,i) => i * 12)
+          .attr('cx',0)
+          .attr('r', 5)
+          .attr('fill', function() {
+            //return d3.interpolateRainbow(colorScale(dataIndex));
+            return d3.interpolateRainbow(colorScale(200-100*Math.sin(dataIndex/50)))
+          })
+          .transition()
+          .attr('cx', function() {return dataIndex})
+          .attr('cy', function(d, i) {
+            //return height - (testData[i] + 10)
+            return 200 - 100*Math.sin(dataIndex/50);
+          });
+        circle
+          .exit()
+          //console.log("hmm")
+          .transition()
+          .attr('cx', 0)
+          //console.log("hmm")
+          .remove();
+      };
+      function murder(){
+        testData.pop();
+        plot(testData, svg);
+        //console.log("broke");
+      }
+      function  buttonPressed(){
+        let x = prompt("This is a prompt");
+        addData(x);
+      }
+      function button2Pressed(){
+        plot(testData, svg);
+      }
+      function button3Pressed(){
+        console.log(testData);
+      }
+      // function addRandom(){
+      //   for(let i = 0 ; i < 100 ; i++){
+      //     let x = Math.floor(Math.random() * 100);
+      //     addData(x);
+      //     sleep(500);
+      //   }
+      // }
+      function addRandom(){
+        intervalFN = setInterval( function(){
+          addData(1);
+        } , 100);
+      }
+
+      function stopButton(){
+        clearInterval(intervalFN);
+      }
+      function testicles() {
+        let box = document.getElementById("inputBoxTest");
+        console.log(box.value);
+        addData(+box.value);
+        box.value='';
+      }
+      function addData(value){
+        testData.push(value);
+        dataIndex += 5
+        plot(testData, svg);
+      }
+    </script>
+  </body>
+</html>
