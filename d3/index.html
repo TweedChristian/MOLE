@@ -6,27 +6,36 @@
   <body>
     <!-- onkeydown="search(this);" -->
     <form action="#" onsubmit="getInputFromBox(); return false">
-      hello?<br>
-      <input type="number" name="test" id="inputBoxTest" action="#">
+      Manual Data Input<br>
+      <input type="number" name="test" id="inputBoxTest" action="#" min="0" max="600">
     </form>
     <div id="buttons">
-      <button type="button" name="button" onclick="buttonPressed();">button</button>
-      <button type="button" name="button2" onclick="button2Pressed();">button2</button>
-      <button type="button" name="button3" onclick="button3Pressed();">button3</button>
-      <button type="button" name="kill" onclick="murder();">Murder circle</button>
-      <button type="button" name="random" onclick="addRandom();">Plot Sin</button>
-      <button type="button" name="stop" onclick="stopButton();" style="background-color: #FF0000;">Stop</button>
+      <button type="button" name="button2" onclick="button2Pressed();">Manual Refresh</button>
+      <button type="button" name="button3" onclick="button3Pressed();">Log Data</button>
+      <button type="button" name="kill" onclick="murder();">Clear Plot</button>
+      <button type="button" name="random" onclick="addRandom();">Plot Random</button>
+      <button type="button" name="linear" onclick="addLinear();">PlotLinear</button>
+      <button type="button" name="sin" onclick="plotSin();">Plot sin</button>
+      <button type="button" name="stop" onclick="stopButton();" style="background-color: #FF0000">Stop</button>
     </div>
     <div id="dataviz"></div>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
+      const circleRadius = 5;
+      const DATA_INTERVAL = 250;
+      const margin = {top: 10, right: 30, bottom: 30, left: 60}
+
       let dataIndex = 0;
       let a = new Array();
       let testData = new Array();
-      let margin = {top: 10, right: 30, bottom: 30, left: 60}
+
       let colorScale = d3.scaleLinear()
-        .domain([0, 100])
+        .domain([0, 500])
         .range([0,1]);
+
+      let color2 = d3.scaleLinear()
+        .domain([0,500])
+        .range(['blue', 'red']);
       let intervalFN;
 
       width = 1000 - margin.left - margin.right,
@@ -36,14 +45,15 @@
         .append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
+          .attr("style", "background-color: #f0f0f0")
         .append("g")
           .attr("trasnform", "translate("+ margin.left + "," + margin.top + ")")
 
       let hAxis = svg.append('line')
-        .attr("y1", height)
-        .attr("y2", height)
+        .attr("y1", height + margin.bottom + margin.top -1)
+        .attr("y2", height + margin.bottom + margin.top -1)
         .attr('x1', 0)
-        .attr('x2', width)
+        .attr('x2', width + margin.left + margin.right)
         .attr('stroke-width', 2)
         .attr("stroke", "#FF00FF")
       const plot = (testData, svg) => {
@@ -51,23 +61,31 @@
         const circle = svg
           .selectAll("circle")
           .data(testData)
+        const line = svg
+          .selectAll("line")
+          .data(testData)
         circle
           .enter()
           .append("circle")
-          .attr('cy', 0)
+          .attr('cy', height + 500)
           //.attr('cx', (d,i) => i * 12)
-          .attr('cx',0)
-          .attr('r', 5)
-          .attr('fill', function() {
-            //return d3.interpolateRainbow(colorScale(dataIndex));
-            return d3.interpolateRainbow(colorScale(200-100*Math.sin(dataIndex/50)))
+          .attr('cx', dataIndex)
+          .attr('r', circleRadius)
+          .attr('fill-opacity', 0)
+          .attr('fill', function(d, i) {
+            //return d3.interpolateRainbow(colorScale(testData[i]));
+            //return d3.interpolateRainbow(colorScale(200-100*Math.sin(dataIndex/50)))
+            return color2(testData[i]);
+          })
+          //.transition()
+          //.duration(500)
+          //.attr('cx', function() {return dataIndex})
+          .attr('cy', function(d, i) {
+            return height - (testData[i] + 2 * circleRadius)
+            //return 200 - 100*Math.sin(dataIndex/50);
           })
           .transition()
-          .attr('cx', function() {return dataIndex})
-          .attr('cy', function(d, i) {
-            //return height - (testData[i] + 10)
-            return 200 - 100*Math.sin(dataIndex/50);
-          });
+          .attr('fill-opacity',1);
         circle
           .exit()
           //console.log("hmm")
@@ -75,15 +93,37 @@
           .attr('cx', 0)
           //console.log("hmm")
           .remove();
+        line
+          .enter()
+          .append("line")
+            .attr('x1', dataIndex - (2 * circleRadius))
+            .attr('y1', function(d,i) {
+              return height -(testData[i-1] + (2* circleRadius))
+            })
+            .attr('x2', dataIndex - 5)
+            .attr('y2', function(d,i) {
+              return height -(testData[i-1] + (2*circleRadius))
+            })
+            .transition()
+            .duration(DATA_INTERVAL)
+            .attr('x2', dataIndex)
+            .attr('y2', function(d,i) {
+              return height - (testData[i] + (2*circleRadius))
+            })
+            .attr('stroke-width', 1)
+            .attr('stroke', function(d, i) { return color2(testData[i])})
+        line
+          .exit()
+          .transition()
+          .attr('stroke-opacity', 1)
+          .remove();
+
       };
       function murder(){
-        testData.pop();
+        testData = [];
+        dataIndex = 0;
         plot(testData, svg);
         //console.log("broke");
-      }
-      function  buttonPressed(){
-        let x = prompt("This is a prompt");
-        addData(x);
       }
       function button2Pressed(){
         plot(testData, svg);
@@ -95,11 +135,23 @@
       //   let x = Math.floor(Math.random() * 100);
       // }
       function addRandom(){
+        clearInterval(intervalFN);
         intervalFN = setInterval( function(){
-          addData(1);
-        } , 100);
+          addData(Math.floor(Math.random() * 500 ));
+        } , DATA_INTERVAL);
       }
-
+      function addLinear(){
+        clearInterval(intervalFN);
+        intervalFN = setInterval( function(){
+          addData(dataIndex);
+        } , DATA_INTERVAL);
+      }
+      function plotSin(){
+        clearInterval(intervalFN)
+        intervalFN = setInterval( function(){
+          addData(height - (height/2 - 100*Math.sin(dataIndex/50)))
+        }, DATA_INTERVAL)
+      }
       function stopButton(){
         clearInterval(intervalFN);
       }
@@ -111,7 +163,7 @@
       }
       function addData(value){
         testData.push(value);
-        dataIndex += 5
+        dataIndex += 10
         plot(testData, svg);
       }
     </script>
