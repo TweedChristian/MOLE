@@ -17,16 +17,19 @@
       <button type="button" name="linear" onclick="addLinear();">PlotLinear</button>
       <button type="button" name="sin" onclick="plotSin();">Plot sin</button>
       <button type="button" name="stop" onclick="stopButton();" style="background-color: #FF0000">Stop</button>
+      <button type="button" name="2nd plot" onclick="changeData();">Change Data</button>
     </div>
     <div id="dataviz"></div>
+    <div id="dv2"></div>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
       const circleRadius = 5;
-      const DATA_INTERVAL = 250;
+      const DATA_INTERVAL = 100;
       const margin = {top: 10, right: 30, bottom: 30, left: 60}
 
+      let dataset = 0;
       let dataIndex = 0;
-      let a = new Array();
+      let altData = [12,133,60,346,487,128,112,90,243,457,234];
       let testData = new Array();
 
       let colorScale = d3.scaleLinear()
@@ -56,66 +59,91 @@
         .attr('x2', width + margin.left + margin.right)
         .attr('stroke-width', 2)
         .attr("stroke", "#FF00FF")
-      const plot = (testData, svg) => {
+      //const plot = (plotData, plotSVG) => {
+      function plot(plotData, plotSVG){
         //plot the circles
-        const circle = svg
+        let circle = plotSVG
           .selectAll("circle")
-          .data(testData)
-        const line = svg
+          .data(plotData)
+        let line = plotSVG
           .selectAll("line")
-          .data(testData)
-        circle
-          .enter()
+          .data(plotData)
+          circle.exit()
+            //console.log("hmm")
+            //.transition()
+            //.attr('cx', 0)
+            //console.log("hmm")
+            .remove();
+        circle.enter() //create circles
           .append("circle")
-          .attr('cy', height + 500)
-          //.attr('cx', (d,i) => i * 12)
-          .attr('cx', dataIndex)
+          .attr('cx', function(d,i){
+            console.log(d);
+            return 10 + (10 * i);
+          })
           .attr('r', circleRadius)
           .attr('fill-opacity', 0)
           .attr('fill', function(d, i) {
-            //return d3.interpolateRainbow(colorScale(testData[i]));
-            //return d3.interpolateRainbow(colorScale(200-100*Math.sin(dataIndex/50)))
-            return color2(testData[i]);
+            return color2(plotData[i]);
           })
-          //.transition()
-          //.duration(500)
-          //.attr('cx', function() {return dataIndex})
           .attr('cy', function(d, i) {
-            return height - (testData[i] + 2 * circleRadius)
-            //return 200 - 100*Math.sin(dataIndex/50);
+            return height - (plotData[i] + 2 * circleRadius)
           })
           .transition()
+          .attr('fill-opacity',1)
+        circle.transition() //update circles position if data changes
+          .attr('cy', function(d, i) {
+            return height - (plotData[i] + 2 * circleRadius)
+          })
           .attr('fill-opacity',1);
-        circle
-          .exit()
-          //console.log("hmm")
-          .transition()
-          .attr('cx', 0)
-          //console.log("hmm")
-          .remove();
-        line
-          .enter()
+        line.enter()
           .append("line")
-            .attr('x1', dataIndex - (2 * circleRadius))
-            .attr('y1', function(d,i) {
-              return height -(testData[i-1] + (2* circleRadius))
+            //.attr('x1', dataIndex - (2 * circleRadius))
+            .attr('x1', function(d, i){
+              return (i * (2*circleRadius));
             })
-            .attr('x2', dataIndex - 5)
+            .attr('y1', function(d,i) {
+              if(i != 0){
+                return height -(plotData[i-1] + (2* circleRadius))
+              }
+              else{
+                return height -(plotData[i] + (2* circleRadius))
+              }
+            })
+            .attr('x2', function(d , i){
+              return i * (2*circleRadius);
+            })
             .attr('y2', function(d,i) {
-              return height -(testData[i-1] + (2*circleRadius))
+                return height -(plotData[i] + (2* circleRadius))
             })
             .transition()
-            .duration(DATA_INTERVAL)
-            .attr('x2', dataIndex)
-            .attr('y2', function(d,i) {
-              return height - (testData[i] + (2*circleRadius))
+            .attr('x2', function(d,i){
+              return (i+1) * (2 * circleRadius);
             })
             .attr('stroke-width', 1)
-            .attr('stroke', function(d, i) { return color2(testData[i])})
-        line
-          .exit()
-          .transition()
-          .attr('stroke-opacity', 1)
+            .attr('stroke', function(d, i) { return color2(plotData[i])})
+
+          line.transition()
+            .duration(DATA_INTERVAL)
+            .attr('x1', function(d, i){
+              return (i * (2*circleRadius));
+            })
+            .attr('y1', function(d,i) {
+              if(i != 0){
+                return height -(plotData[i-1] + (2* circleRadius))
+              }
+              else{
+                return height -(plotData[i] + (2* circleRadius))
+              }
+            })
+            .attr('x2', function(d,i){
+              return (i + 1) * (2 * circleRadius);
+            })
+            .attr('y2', function(d,i) {
+              return height - (plotData[i] + (2*circleRadius))
+            })
+            .attr('stroke-width', 1)
+            .attr('stroke', function(d, i) { return color2(plotData[i])})
+        line.exit()
           .remove();
 
       };
@@ -131,9 +159,6 @@
       function button3Pressed(){
         console.log(testData);
       }
-      // function addRandom(){
-      //   let x = Math.floor(Math.random() * 100);
-      // }
       function addRandom(){
         clearInterval(intervalFN);
         intervalFN = setInterval( function(){
@@ -165,6 +190,17 @@
         testData.push(value);
         dataIndex += 10
         plot(testData, svg);
+      }
+      function changeData(){
+        console.log("Changing Data")
+        if(dataset == 0){
+          dataset = 1;
+          plot(altData, svg);
+        }
+        else{
+          dataset = 0;
+          plot(testData,svg);
+        }
       }
     </script>
   </body>
