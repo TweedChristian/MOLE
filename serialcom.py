@@ -28,7 +28,7 @@ class movementJSON:
             print('This is not a valid JSON file')
             return 0
         else:
-            return 1    
+            return 1
 
 
 def sendSerial():
@@ -56,7 +56,7 @@ def main():
     address = '0.0.0.0'
     print('Started data layer')
     if(startSocket() == 1):
-        sendMessage(b'Im connecting')
+        sendMessage('Im connecting')
     else:
         print('yikers batman')
     received = 0
@@ -69,6 +69,7 @@ def main():
             jsonString['yaw'] = 30 #Modifying the JSON
             newString = json.dumps(jsonString)
             #Sending a new JSON
+            print(type(newString))
             sendMessage(newString)
             data2 = sockClient.recv(1024)
             print("Response", repr(data2))
@@ -91,6 +92,7 @@ def startSocket():
 
 def sendMessage(jargon):
     #Converting the String to a byte array
-    sockClient.sendall(jargon)
+    mesg = jargon.encode('ascii')
+    sockClient.sendall(mesg)
 
 main()
