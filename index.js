@@ -167,6 +167,21 @@ function addObstacle(){
 
     //Make our triangles
 
-    
- }
+    //Top Face
+    obstaclePoints.push(topFrontLeft);
+    obstaclePoints.push(topFrontRight);
+    obstaclePoints.push(topBackRight);
+    obstaclePoints.push(topFrontLeft);
+    obstaclePoints.push(topBackRight);
+    obstaclePoints.push(topBackLeft);
 
+    //Bottom Face
+
+    //Front Face
+
+    //Back Face
+
+    //Right Face
+
+    //Left Face
+}

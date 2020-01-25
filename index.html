@@ -1,54 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <title>MOLE</title>
-    <script src="index.js"></script>
-    <script src="lib/webgl-utils.js"></script>
-    <script src="lib/initShaders.js"></script>
-    <script src="lib/MV.js"></script>
-
-    <script id="vshader" type="x-shader/x-vertex">
-    attribute vec4 vPosition;
-    attribute vec4 vColor;
-    uniform mat4 modelMatrix;
-    uniform mat4 projectionMatrix;
-    uniform mat4 viewMatrix;
-    varying vec4 fColor;
-	void main() {
-		gl_Position =  projectionMatrix * viewMatrix * modelMatrix * vPosition;
-		fColor = vColor;
-  	}
-	</script>
-
-    <script id="fshader" type="x-shader/x-fragment">
-	precision mediump float;
-	varying vec4 fColor;
-	void main()
-	{
-		gl_FragColor = fColor;
-  	}
-	</script>
+    <script src="nexus.js"></script>
 </head>
 
-<body onload="main()">
-    <h1 style="text-align: center;">Pathfinding</h1>
-    <div>
-        <form>
-            <p>Add Obstacle:</p>
-            x: <input type="text" id="x"><br>
-            y: <input type="text" id="y"><br>
-            z: <input type="text" id="z"><br>
-            length: <input type="text" id="l"><br>
-            width: <input type="text" id="w"><br>
-            height: <input type="text" id="h"><br>
-            <button onclick=addObstacle()>Add</button>
-        </form>
-    </div>
-    <div style="width: 100%; text-align: center;">
-    <canvas id="Canvas" width="400" height="400" style="display: inline;">Please use an updated browser that can handle the canvas tag</canvas>
-    </div>
+<body onload=main()>
+<div id='inputVals'>
+    <label><b>Distance: </b></label><input type='text' value='30' id='distance'><br>
+    <label><b>Min Depth: </b></label><input type='text' value='25' id='depth'><br>
+    <label><b>Mode: </b></label><input type='checkbox' id='parabola'>Parabola
+    <input type='checkbox' id='arc'>Arc<br>
+    <label><b>Turning Radius: </b></label><input type='text' value='20' id='turningRadius'><br>
+    <label><i>Add Obstacle</i></label><br>
+    <label>X: </label><input type='text' value='2' id='x'><br>
+    <label>Y: </label><input type='text' value='6' id='y'><br>
+    <label>Z: </label><input type='text' value='4' id='z'><br>
+    <label>Radius: </label><input type='text' value='4' id='radius'><br>
+    <button onclick="addObject()">Add</button><br>
+    <button onclick="fetchData()">Run</button><br>
+</div>
 </body>
-
-</html>
