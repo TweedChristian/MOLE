@@ -27,6 +27,7 @@ const server = http.createServer(function(request, response){
 function handleGet(request, response){
     console.log("DOES NOT PASS THE VIBE CHECK");
     const filename = dir + request.url.slice(1);
+    console.log("get",filename);
     if('request.url' ==='/'){
         sendFile(response, 'index.html');
     }
@@ -42,6 +43,7 @@ const sendFile = function(response, filename){
         if(err === null){
             //no error file found
             response.writeHead(200, {'Content-Type': type});
+            response.end(content);
         }
         else{
             //file not found
@@ -61,7 +63,7 @@ function handlePost(request, response){
         //SEND TO NET
         //sendToDataLayer(dataString);
         response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
-        response.end(JSON.stringify(ret), 'utf-8');
+        response.end(JSON.stringify(dataString), 'utf-8');
     })
 }
 

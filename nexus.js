@@ -49,8 +49,8 @@ function addObject(){
 function setupControls(){
     let mode = document.getElementById('mode').checked;
     if(mode == true){
-        document.addEventListener('keydown', (event) => {
-            console.log(event.key);
+        document.addEventListener('keydown', (event) => {      
+            console.log(key);      
             send(event.key);
         });
     }
@@ -64,6 +64,7 @@ function setupControls(){
 
 function send(key){
     //Send key to server
+    console.log(key);
     fetch('/submit', {
         method: 'POST',
         body: JSON.stringify({character: key}),
