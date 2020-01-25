@@ -23,6 +23,7 @@ function fetchData(){
     values.splice(0, values.length);
     values.push(distance, depth, arc);
     console.log(values);
+    setupControls();
 }
 
 function toggle(){
@@ -42,4 +43,35 @@ function addObject(){
     console.log(typeof x)
     obstacles.push([x,y,z,radius]);
     console.log(obstacles);
+}
+
+
+function setupControls(){
+    let mode = document.getElementById('mode').checked;
+    if(mode == true){
+        document.addEventListener('keydown', (event) => {
+            console.log(event.key);
+            send(event.key);
+        });
+    }
+    else{
+        document.addEventListener('keyup', (event) => {
+            console.log(event.key);
+            send(event.key);
+        })
+    }
+}
+
+function send(key){
+    //Send key to server
+    fetch('/submit', {
+        method: 'POST',
+        body: JSON.stringify({character: key}),
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(f => {
+        console.log(f);
+    })
 }

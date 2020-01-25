@@ -1,24 +1,29 @@
 <!DOCTYPE html>
-
-<head>
-    <meta charset="UTF-8">
-    <title>MOLE</title>
-    <script src="nexus.js"></script>
-</head>
-
-<body onload=main()>
-<div id='inputVals'>
-    <label><b>Distance: </b></label><input type='text' value='30' id='distance'><br>
-    <label><b>Min Depth: </b></label><input type='text' value='25' id='depth'><br>
-    <label><b>Mode: </b></label><input type='checkbox' id='parabola'>Parabola
-    <input type='checkbox' id='arc'>Arc<br>
-    <label><b>Turning Radius: </b></label><input type='text' value='20' id='turningRadius'><br>
-    <label><i>Add Obstacle</i></label><br>
-    <label>X: </label><input type='text' value='2' id='x'><br>
-    <label>Y: </label><input type='text' value='6' id='y'><br>
-    <label>Z: </label><input type='text' value='4' id='z'><br>
-    <label>Radius: </label><input type='text' value='4' id='radius'><br>
-    <button onclick="addObject()">Add</button><br>
-    <button onclick="fetchData()">Run</button><br>
-</div>
-</body>
+<html lang='en'>
+    <head>
+        <meta charset="utf-8">
+        <title>MOLE</title>
+        <script src="nexus.js"></script>
+        <link rel="icon" href="data:,">
+    </head>
+    
+    <body onload=main()>
+    <div id='inputVals'>
+        <label><b>Distance: </b></label><input type='text' value='30' id='distance'><br>
+        <label><b>Min Depth: </b></label><input type='text' value='25' id='depth'><br>
+        <!-- TODO: Make a radio -->
+        <label><b>Mode: </b></label><input type='checkbox' id='parabola'>Parabola
+        <input type='checkbox' id='arc'>Arc<br>
+        <label><b>Turning Radius: </b></label><input type='text' value='20' id='turningRadius'><br>
+        <label><i>Add Obstacle</i></label><br>
+        <label>X: </label><input type='text' value='2' id='x'><br>
+        <label>Y: </label><input type='text' value='6' id='y'><br>
+        <label>Z: </label><input type='text' value='4' id='z'><br>
+        <label>Radius: </label><input type='text' value='4' id='radius'><br>
+        <button onclick="addObject()">Add</button><br>
+        <button onclick="fetchData()">Run</button><br>
+    </div>
+    
+    <label>Continuous</label><input type='checkbox' id='mode'>
+    </body>
+</html>
