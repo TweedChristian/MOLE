@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 
 import socket
+import serial
 
-port = 7082
 
-for i in range(0,10):
-    print(i)
+serialPort = "/dev/ttyACM1"
+port = 7086
+# try:
+arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
+# except:
+#     print("Invalid Serial Port")
 
 s = socket.socket()
 s.connect(('0.0.0.0', port))
 s.sendall('jef')
-data = s.recv(1024)
 
-print('Received', repr(data))
+while 1:
+    data = s.recv(1024)
+    print('Received') 
+    print(repr(data).strip('\''))
+    arduino.write(repr(data).strip('\''))
 s.close()
