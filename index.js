@@ -122,7 +122,7 @@ function parabola(distance, degreesOfMotion){
     let b = -4 * depth / distance;    
     let y;
     let x;
-    for(let i=0; i< 1000; i++){
+    for(let i=0; i < 1000; i++){
         x = i * segment;
         y = (a * x * x) + (b * x);
         points.push(vec4(x, y, 0.0, 1.0));
