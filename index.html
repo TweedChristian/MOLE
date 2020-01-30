@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang='en'>
-    <head>
-        <meta charset="utf-8">
-        <title>MOLE</title>
-        <script src="nexus.js"></script>
-        <link rel="icon" href="data:,">
-    </head>
-    
-    <body onload=main()>
+
+<head>
+    <meta charset="utf-8">
+    <title>MOLE</title>
+    <script src="nexus.js"></script>
+    <link rel="icon" href="data:,">
+</head>
+
+<body onload=main()>
     <div id='inputVals'>
         <label><b>Distance: </b></label><input type='text' value='30' id='distance'><br>
         <label><b>Min Depth: </b></label><input type='text' value='25' id='depth'><br>
         <!-- TODO: Make a radio -->
-        <label><b>Mode: </b></label><input type='checkbox' id='parabola'>Parabola
-        <input type='checkbox' id='arc'>Arc<br>
+        <label><b>Mode: </b></label>
+        <label>Parabola</label><input type='radio' name='style' id='parabola'><br>
+        <label>Arc</label><input type='radio' checked name='style' id='arc'><br>
         <label><b>Turning Radius: </b></label><input type='text' value='20' id='turningRadius'><br>
         <label><i>Add Obstacle</i></label><br>
         <label>X: </label><input type='text' value='2' id='x'><br>
@@ -23,7 +25,23 @@
         <button onclick="addObject()">Add</button><br>
         <button onclick="fetchData()">Run</button><br>
     </div>
-    
+
     <label>Continuous</label><input type='checkbox' id='mode'>
-    </body>
+    <div id='controls'>
+        <label>Boring Speed</label><input type='range' min='0' max='20' value='10' id='boring'><br>
+        <label>Extension</label><input type='range' id='extension' min='0' max='20' value='10'><br>
+        <button onclick='inflate()'>Inflate</button><br>
+        <label>Turning X</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnx'><br>
+        <label>Turning Z</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnz'><br>
+    </div>
+    <!-- TODO: Big stop button -->
+    <label><b>Command Log</b></label>
+    <div id='commandLog'>
+        <!-- TODO: Make a style file -->
+        <ul id='logBox' style='background-color: antiquewhite; height: 400px; overflow: auto; width: 300px; list-style: none;'>
+            <li><i>Sent commands go here</i></li>
+        </ul>
+    </div>
+</body>
+
 </html>

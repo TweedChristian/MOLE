@@ -45,3 +45,7 @@ function alterSideLength(sl){
     return fixedSideLength;
 }
 
+/**
+ * Keep track of current angle turned
+ * 
+ */
