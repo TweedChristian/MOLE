@@ -6,11 +6,11 @@ const mime = require('mime');
 
 let serve;
 let socket;
-let port = 7084;
+let port = 7086;
 let received = 0;
 let dir = ''
 
-//startNetServer();
+startNetServer();
 
 const server = http.createServer(function(request, response){
     if(request.method === 'GET'){
@@ -28,7 +28,8 @@ function handleGet(request, response){
     console.log("DOES NOT PASS THE VIBE CHECK");
     const filename = dir + request.url.slice(1);
     console.log("get",filename);
-    if(request.url === '/'){
+
+    if(request.url ==='/'){
         sendFile(response, 'index.html');
     }
     else{
@@ -61,7 +62,7 @@ function handlePost(request, response){
     request.on('end', function(){
         console.log(JSON.parse(dataString));
         //SEND TO NET
-        //sendToDataLayer(dataString);
+        sendToDataLayer(dataString);
         response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
         response.end(JSON.stringify(dataString), 'utf-8');
     })
@@ -74,17 +75,23 @@ function handleOtherRequest(response){
 
 function startNetServer(){
     console.log('Net Server Started');
-    serve = net.createServer(function(socket) {
-        socket = socket;
+    serve = net.createServer(function(soc) {
+        socket = soc;
     });
 }
 
 function sendToDataLayer(obj){
+    let validChars = ['w', 'a', 's', 'd'];
+    let val = JSON.parse(obj);
+    if(!validChars.includes(val.character)){
+        return;
+    }
     try{
-        socket.write(obj);
-        console.log(obj);
+        socket.write(val.character);
+        // console.log(obj);
         socket.on('data', function(data){
-            console.log(data);
+            // console.log(data.toString());
+            serve.close();
         })
     }
     catch(error){
@@ -92,7 +99,7 @@ function sendToDataLayer(obj){
     }
 }
 
-//serve.listen(port); //7084
+serve.listen(port); //7084
 server.listen(process.env.PORT || frontPort); //3000
 
 setTimeout(function(){
