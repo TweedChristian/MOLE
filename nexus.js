@@ -65,7 +65,7 @@ function send(key) {
     addCommand('Key pressed: ' + key);
     fetch('/submit', {
         method: 'POST',
-        body: JSON.stringify({ character: key }),
+        body: JSON.stringify({type: "controls", character: key }),
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
     })
