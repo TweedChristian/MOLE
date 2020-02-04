@@ -81,18 +81,21 @@ function startNetServer(){
 }
 
 function sendToDataLayer(obj){
-    let validChars = ['w', 'a', 's', 'd'];
+    //TODO: this currently only sends single characters, should be adapted to send JSON objects as specced in MOLE API
+    let validChars = ['w', 'a', 's', 'd', 'p'];
     let val = JSON.parse(obj);
     if(!validChars.includes(val.character)){
-        return;
+        console.log("No handler for this key");
+        // return;
     }
     try{
-        socket.write(val.character);
+        //socket.write(val.character);
+        socket.write(JSON.stringify(val));
         // console.log(obj);
-        socket.on('data', function(data){
-            // console.log(data.toString());
-            serve.close();
-        })
+        // socket.on('data', function(data){
+        //     // console.log(data.toString());
+        //     serve.close();
+        // })
     }
     catch(error){
         console.log(error);
