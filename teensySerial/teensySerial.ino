@@ -1,9 +1,11 @@
+
 char incomingByte = 0;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(13, OUTPUT);
+  pinMode(32, INPUT);
 }
 
 void loop() {
@@ -18,6 +20,14 @@ void loop() {
     }
     if(incomingByte == 'a'){
       digitalWrite(13, LOW);
+    }
+    if(incomingByte == 'd'){
+      if(digitalRead(32) == HIGH){
+        Serial.write("LED IS ON");
+      }
+      else{
+        Serial.write("LED IS OFF");
+      }
     }
   }
 }
