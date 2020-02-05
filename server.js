@@ -86,7 +86,10 @@ function sendToDataLayer(obj){
     let val = JSON.parse(obj);
     if(!validChars.includes(val.character)){
         console.log("No handler for this key");
-        // return;
+        if(val.character.length > 1){
+            return;
+        }
+        //return;
     }
     try{
         //socket.write(val.character);

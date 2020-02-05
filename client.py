@@ -6,21 +6,50 @@ import sys
 import json
 
 
-def parseControlMessage(message):
-    print("Control Message")
+def parseCommandMessage(message):
+    print("Command Message")
     print(message['character'])
+    # 000
+    # msg = str(0b000)
+    # msg = msg + message['character']
+    # print(msg)
+    # b=msg.encode('ascii')
+    # print(b)
+    # arduino.write(b)
+
+    msg = 0b000
+    print("initial message", msg)
+    print("ord", ord(message['character']))
+    print("ord but its shifted", ord(message['character']) << 8)
+    msg |= (ord(message['character']) << 8)
+    print("message with data", msg)
+    data = msg & (0b1111111 << 8)
+    data = data >> 8
+    print("extracted message data",data)
+    # print(type(message['character']))
+    # print(type(message['character'].encode('ascii')))
+    print(type(data))
+    # arduino.write(msg)
+    arduino.write('0')
+    arduino.write(chr(data))
+    arduino.write('\n')
+
 
 def parseDesyncMessage(message):
     print("Desync Message")
+    # 010
 
 def parseErrorMessage(message):
     print("Error Message")
+    # 011
 
 def parsePathMessage(message):
     print("Path Message")
+    # 001
 
 def emergencyStop():
     print("Bad things happening")
+    # 111
 
 if(len(sys.argv) != 2):
     print("Usage: python client.py <serial port>")
@@ -52,7 +81,7 @@ while 1:
         print("Message has no type field")
         messageType = ''
     if(messageType == 'controls'):
-        parseControlMessage(x)
+        parseCommandMessage(x)
     elif(messageType == 'desync'):
         parseDesyncMessage(x)
     elif(messageType == 'emergency'):
@@ -66,5 +95,5 @@ while 1:
     # print(x['character'])
     # print(repr(data).strip('\''))
     # arduino.write(repr(data).strip('\''))
-    # print("arduino says:", arduino.readline())
+    print("arduino says:", arduino.readline())
 s.close()
