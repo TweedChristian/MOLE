@@ -92,7 +92,7 @@ function compare(){
         controls[3] = turnx;
     }
     else if(turnz !== controls[4]){
-        addCommand('Turning x: ' + turnx + ' degrees');
+        addCommand('Turning z: ' + turnz + ' degrees');
         controls[4] = turnz;
     }
     else{
@@ -108,6 +108,8 @@ function populate(){
     controls = [bore, extension, false, turnx, turnz];
 }
 
+//Small bug here, if I click the button and then hit enter it clicks
+//the bug again
 function inflate(){
     if(controls[2] === false){
         addCommand('Inflating');

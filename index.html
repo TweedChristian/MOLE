@@ -6,6 +6,7 @@
     <title>MOLE</title>
     <script src="nexus.js"></script>
     <link rel="icon" href="data:,">
+    <link rel='stylesheet' type='text/css' href='style.css'>
 </head>
 
 <body onload=main()>
@@ -28,25 +29,30 @@
 
     <label>Continuous</label><input type='checkbox' id='mode'>
     <br><br>
-    <div id='controls'>
-        <label>Boring Speed: </label><br>
-        <label>0</label><input type='range' min='0' max='20' value='10' id='boring'><label>20</label><br>
-        <label>Extension: </label><br>
-        <label>0</label><input type='range' id='extension' min='0' max='20' value='10'><label>20</label><br>
-        <button onclick='inflate()'>Inflate</button><br>
-        <label>Turning X: </label><br>
-        <label>-3.5</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnx'><label>3.5</label><br>
-        <label>Turning Z: </label><br>
-        <label>-3.5</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnz'><label>3.5</label><br>
+
+    <div class="controlContainer">
+        <div id='controls' class='inputs'>
+            <label>Boring Speed: </label><br>
+            <label>0</label><input type='range' min='0' max='20' value='10' id='boring'><label>20</label><br>
+            <label>Extension: </label><br>
+            <label>0</label><input type='range' id='extension' min='0' max='20' value='10'><label>20</label><br>
+            <button onclick='inflate()'>Inflate</button><br>
+            <label>Turning X: </label><br>
+            <label>-3.5</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnx'><label>3.5</label><br>
+            <label>Turning Z: </label><br>
+            <label>-3.5</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnz'><label>3.5</label><br>
+        </div>
+        <div class='commandLog'>
+            <label><b>Command Log</b></label>
+        <div id='commandLog'>
+            <!-- TODO: Make a style file -->
+            <ul id='logBox' style='background-color: antiquewhite; height: 400px; overflow: auto; width: 300px; list-style: none;'>
+                <li><i>Sent commands go here</i></li>
+            </ul>
+        </div>
+        </div>
     </div>
     <!-- TODO: Big stop button -->
-    <label><b>Command Log</b></label>
-    <div id='commandLog'>
-        <!-- TODO: Make a style file -->
-        <ul id='logBox' style='background-color: antiquewhite; height: 400px; overflow: auto; width: 300px; list-style: none;'>
-            <li><i>Sent commands go here</i></li>
-        </ul>
-    </div>
 </body>
 
 </html>
