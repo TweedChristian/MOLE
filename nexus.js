@@ -63,9 +63,10 @@ function addCommand(message) {
 function send(key) {
     //Send key to server
     addCommand('Key pressed: ' + key);
+    let testValue = 15;
     fetch('/submit', {
         method: 'POST',
-        body: JSON.stringify({type: "controls", character: key }),
+        body: JSON.stringify({type: "controls", character: key, boringSpeed: testValue}),
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
     })

@@ -6,7 +6,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(13, OUTPUT);
-  pinMode(30, OUTPUT);
+//  pinMode(30, OUTPUT);
 }
 
 void loop() {
@@ -16,14 +16,17 @@ void loop() {
     message += incomingByte;
     if(incomingByte == '\n'){
       Serial.print(message);
-      if(message.indexOf('a') > 0){
-        digitalWrite(13, HIGH);
+      if(message[1] == 'a'){
+        blink(2);
       }
-      if(message.indexOf('s') > 0) {
-        digitalWrite(13, LOW);
+      if(message[1] == 's') {
+        blink(3);
+      }
+      if(message[1] == 'd'){
+        blink((int)message[2]);
       }
       message = "";
-      analogWrite(30, 20);
+//      analogWrite(30, 20);
     }
   }
 //  if (Serial.available() > 0) {
@@ -39,4 +42,13 @@ void loop() {
 //      message += incomingByte;
 //    }
 //  }
+}
+
+void blink(int count){
+  for(int i = 0; i < count; i ++){
+    digitalWrite(13, HIGH);
+    delay(250);
+    digitalWrite(13, LOW);
+    delay(250);
+  }
 }
