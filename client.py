@@ -4,6 +4,23 @@ import socket
 import serial
 import sys
 import json
+import numpy as np
+
+
+def scale(domainMin, domainMax, rangeMin, rangeMax, value):
+    if(value < domainMin or value > domainMax):
+        print("Cannot scale, value ", value, "is out of range")
+        return
+    if(domainMin < 0):
+        scale = abs(domainMin)
+        domainMin = domainMin + scale
+        domainMax = domainMax + scale
+        value = value + scale
+    # dMin / dMax = rMin/rMax
+    # val/dMax = ret/rMax
+    # ret = val/dMax * rMax
+    scaled = (float(value) / float(domainMax)) * float(rangeMax)
+    return int(scaled)
 
 
 def parseCommandMessage(message):
@@ -32,7 +49,7 @@ def parseCommandMessage(message):
 
     # Lets just ignore that stuff up there for a second
     # True format will be 
-    # type: 'controls'
+    # type: controls
     # boringSpeed: int
     # extensionRate: int (?)
     # inflateFront: bool
@@ -43,12 +60,8 @@ def parseCommandMessage(message):
     # EG turning goes from -3.5 to 3.5 (i think) so balls out turning left (-3.5) will be 0, and balls out right (+3.5)will be 255
 
     charData = message['character']
-    speedData = message['boringSpeed']
-
-    print(type(charData))
-    print(type(ord(charData)))
-    print(type(chr(ord(charData))))
-    print(type(speedData))
+    speedData = int(message['boringSpeed'])
+    print("speeddata", speedData, type(speedData), chr(speedData))
     arduino.write('0')
     arduino.write(chr(ord(charData)))
     arduino.write(chr(speedData))
@@ -73,13 +86,14 @@ def emergencyStop():
 
 if(len(sys.argv) != 2):
     print("Usage: python client.py <serial port>")
+    print(scale(-3.5,3.5,0,255,0))
     exit()
 serialPort = sys.argv[1]
 port = 7086
 try:
     arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
 except:
-    print("Could not establish serial connection")
+    print("Could not establish serial connection to port " + serialPort)
     exit()
 
 s = socket.socket()
