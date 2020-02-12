@@ -6,6 +6,9 @@ import sys
 import json
 import numpy as np
 
+MAX_BORE = 2000
+MIN_TURN = -3.5
+MAX_TURN = 3.5
 
 def scale(domainMin, domainMax, rangeMin, rangeMax, value):
     if(value < domainMin or value > domainMax):
@@ -16,38 +19,17 @@ def scale(domainMin, domainMax, rangeMin, rangeMax, value):
         domainMin = domainMin + scale
         domainMax = domainMax + scale
         value = value + scale
-    # dMin / dMax = rMin/rMax
-    # val/dMax = ret/rMax
-    # ret = val/dMax * rMax
     scaled = (float(value) / float(domainMax)) * float(rangeMax)
     return int(scaled)
 
 
+def parseTestMessage(message):
+    print("Test Message")
+    # TODO
+
+
 def parseCommandMessage(message):
-    print("Command Message")
-    # print(message['character'])
-    # # 000
-    # # msg = str(0b000)
-    # # msg = msg + message['character']
-    # # print(msg)
-    # # b=msg.encode('ascii')
-    # # print(b)
-    # # arduino.write(b)
-
-    # msg = 0b000
-    # print("initial message", msg)
-    # print("ord", ord(message['character']))
-    # print("ord but its shifted", ord(message['character']) << 8)
-    # msg |= (ord(message['character']) << 8)
-    # print("message with data", msg)
-    # data = ord(message['character'])
-    # print("extracted message data",data)
-    # # print(type(message['character']))
-    # # print(type(message['character'].encode('ascii')))
-    # print(type(data))
-    # # arduino.write(msg)
-
-    # Lets just ignore that stuff up there for a second
+    # 000
     # True format will be 
     # type: controls
     # boringSpeed: int
@@ -58,15 +40,28 @@ def parseCommandMessage(message):
     # turningY: float
     # All values for analog control must be mapped from their values to a 0 - 255 scale
     # EG turning goes from -3.5 to 3.5 (i think) so balls out turning left (-3.5) will be 0, and balls out right (+3.5)will be 255
+    print("command message")
 
-    charData = message['character']
-    speedData = int(message['boringSpeed'])
-    print("speeddata", speedData, type(speedData), chr(speedData))
+    # Get everything out of the message
+    boringSpeed = message['boringSpeed']
+    extensionRate = message['extensionRate']
+    inflateFront = message['inflateFront']
+    inflateBack = message['inflateBack']
+    turningX = message['turningX']
+    turningY = message['turningY']
+
+    print(boringSpeed, extensionRate, inflateFront, inflateBack, turningX, turningY)
+
     arduino.write('0')
-    arduino.write(chr(ord(charData)))
-    arduino.write(chr(speedData))
+    arduino.write(chr(boringSpeed))
+    arduino.write(chr(extensionRate))
+    arduino.write(chr(inflateFront))
+    arduino.write(chr(inflateBack))
+    arduino.write(chr(int(turningX*10)))
+    arduino.write(chr(int(turningY*10)))
     arduino.write('\n')
 
+    
 
 def parseDesyncMessage(message):
     print("Desync Message")
@@ -84,14 +79,23 @@ def emergencyStop():
     print("Bad things happening")
     # 111
 
+def sendUpstream(message, socket):
+    message = message.encode('ascii')
+    try:
+        socket.sendall(message)
+        return 1
+    except:
+        return 0
+        
+
 if(len(sys.argv) != 2):
     print("Usage: python client.py <serial port>")
-    print(scale(-3.5,3.5,0,255,0))
     exit()
+
 serialPort = sys.argv[1]
 port = 7086
 try:
-    arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
+    arduino = serial.Serial(serialPort, timeout = 5, baudrate = 9600)
 except:
     print("Could not establish serial connection to port " + serialPort)
     exit()
@@ -126,8 +130,15 @@ while 1:
         parsePathMessage(x)
     else:
         print("Malformed message of type " + messageType + " recieved")
-    # print(x['character'])
-    # print(repr(data).strip('\''))
-    # arduino.write(repr(data).strip('\''))
-    print("arduino says:", arduino.readline())
+    reply = arduino.readline()
+    print(type(reply))
+    print("arduino says:", reply)
+    okMessage = {
+        'type': 'ok'
+    }
+    okJSON = json.dumps(okMessage)
+    if(sendUpstream(okJSON,s)):
+        print("sent ok message")
+    else:
+        print("error sending ok message")
 s.close()

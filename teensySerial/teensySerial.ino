@@ -1,6 +1,12 @@
 
 char incomingByte = 0;
 String message;
+int boringSpeed;
+int extensionRate;
+int inflateFront;
+int inflateBack;
+float turningX;
+float turningY;
 
 void setup() {
   // put your setup code here, to run once:
@@ -15,33 +21,31 @@ void loop() {
     incomingByte = Serial.read();
     message += incomingByte;
     if(incomingByte == '\n'){
-      Serial.print(message);
-      if(message[1] == 'a'){
-        blink(2);
-      }
-      if(message[1] == 's') {
-        blink(3);
-      }
-      if(message[1] == 'd'){
-        blink((int)message[2]);
+//      Serial.print(message);
+      if(message[0] == '0'){
+        boringSpeed = (int)message[1];
+        extensionRate = (int)message[2];
+        inflateFront = (int)message[3];
+        inflateBack = (int)message[4];
+        turningX = (float)((float)(int)message[5]/10.0);
+        turningY = (float)((float)(int)message[6]/10.0);
+        Serial.print(boringSpeed);
+        Serial.write(',');
+        Serial.print(extensionRate);
+        Serial.write(',');
+        Serial.print(inflateFront);
+        Serial.write(',');
+        Serial.print(inflateBack);
+        Serial.write(',');
+        Serial.print(turningX);
+        Serial.write(',');
+        Serial.print(turningY);
+        Serial.write('\n');
       }
       message = "";
 //      analogWrite(30, 20);
     }
   }
-//  if (Serial.available() > 0) {
-//    analogWrite(30, 25);
-//    incomingByte = Serial.read();
-//    if(incomingByte == '\n'){
-//      Serial.write(message[1]);
-//      if(message[1] == 'a'){
-//        digitalWrite(13, HIGH);
-//      }
-//    }
-//    else{
-//      message += incomingByte;
-//    }
-//  }
 }
 
 void blink(int count){
