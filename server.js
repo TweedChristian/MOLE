@@ -10,9 +10,10 @@ let port = 7086;
 let received = 0;
 let dir = ''
 
-startNetServer();
+//startNetServer();
 
 const server = http.createServer(function(request, response){
+    console.log(request.method);
     if(request.method === 'GET'){
         handleGet(request, response);
     }
@@ -61,50 +62,72 @@ function handlePost(request, response){
     });
     request.on('end', function(){
         console.log(JSON.parse(dataString));
+        //TODO: switch later based on json.type
+        let status = handleControls(JSON.parse(dataString));
         //SEND TO NET
-        sendToDataLayer(dataString);
+        //sendToDataLayer(dataString);
         response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
-        response.end(JSON.stringify(dataString), 'utf-8');
+        response.end(JSON.stringify(status), 'utf-8');
     })
 }
 
+function handleControls(controls){
+    //TODO: get rid of dummy data for actual polling from the arduino
+    let status = {
+        type: 'status',
+        imuAccX: 1.0,
+        imuAccY: 0.0,
+        imuAccZ: 1.2,
+        imuYaw: 1.0,
+        imuPitch: 1.0,
+        imuRoll: 0.0,
+        boringRPM: 1.1,
+        extensionRPM: 1.0,
+        drillTemp: 100,
+        steeringYaw: 1.0,
+        steeringPitch: 10.0,
+        frontPSI: 90.0,
+        backPSI: 80.0
+    }
+    return status;
+}
 function handleOtherRequest(response){
     response.writeHeader(418);
     response.end();
 }
 
-function startNetServer(){
-    console.log('Net Server Started');
-    serve = net.createServer(function(soc) {
-        socket = soc;
-    });
-}
+// function startNetServer(){
+//     console.log('Net Server Started');
+//     serve = net.createServer(function(soc) {
+//         socket = soc;
+//     });
+// }
 
-function sendToDataLayer(obj){
-    let validChars = ['w', 'a', 's', 'd'];
-    let val = JSON.parse(obj);
-    if(!validChars.includes(val.character)){
-        return;
-    }
-    try{
-        socket.write(val.character);
-        // console.log(obj);
-        socket.on('data', function(data){
-            // console.log(data.toString());
-            serve.close();
-        })
-    }
-    catch(error){
-        console.log(error);
-    }
-}
+// function sendToDataLayer(obj){
+//     let validChars = ['w', 'a', 's', 'd'];
+//     let val = JSON.parse(obj);
+//     if(!validChars.includes(val.character)){
+//         return;
+//     }
+//     try{
+//         socket.write(val.character);
+//         // console.log(obj);
+//         socket.on('data', function(data){
+//             // console.log(data.toString());
+//             serve.close();
+//         })
+//     }
+//     catch(error){
+//         console.log(error);
+//     }
+// }
 
-serve.listen(port); //7084
+//serve.listen(port); //7084
 server.listen(process.env.PORT || frontPort); //3000
 
 setTimeout(function(){
     console.log('slow');
-    serve.close()
+   // serve.close()
     server.close();
 }, 100000)
 

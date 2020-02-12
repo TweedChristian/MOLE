@@ -10,10 +10,9 @@
 </head>
 
 <body onload=main()>
-    <div id='inputVals'>
+    <!-- <div id='inputVals'>
         <label><b>Distance: </b></label><input type='text' value='30' id='distance'><br>
         <label><b>Min Depth: </b></label><input type='text' value='25' id='depth'><br>
-        <!-- TODO: Make a radio -->
         <label><b>Mode: </b></label>
         <label>Parabola</label><input type='radio' name='style' id='parabola'><br>
         <label>Arc</label><input type='radio' checked name='style' id='arc'><br>
@@ -28,7 +27,7 @@
     </div>
 
     <label>Continuous</label><input type='checkbox' id='mode'>
-    <br><br>
+    <br><br> -->
 
     <div class="controlContainer">
         <div id='controls' class='inputs'>
@@ -36,11 +35,12 @@
             <label>0</label><input type='range' min='0' max='20' value='10' id='boring'><label>20</label><br>
             <label>Extension: </label><br>
             <label>0</label><input type='range' id='extension' min='0' max='20' value='10'><label>20</label><br>
-            <button onclick='inflate()'>Inflate</button><br>
             <label>Turning X: </label><br>
             <label>-3.5</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnx'><label>3.5</label><br>
             <label>Turning Z: </label><br>
             <label>-3.5</label><input type='range' min='-3.5' max='3.5' value='0.0' id='turnz'><label>3.5</label><br>
+            <button onclick='inflate(0)'>Inflate Front</button><br>            
+            <button onclick='inflate(1)'>Inflate Back</button><br>            
         </div>
         <div class='commandLog'>
             <label><b>Command Log</b></label>
