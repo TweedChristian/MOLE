@@ -66,6 +66,7 @@ function addCommand(message) {
 
 
 function send(req) {
+    console.log("i give up")
     //Send key to server
     console.log(req);
     fetch('/submit', {
@@ -173,7 +174,8 @@ function inflate(location) {
 
 function filterKey(key) {
     if (key == 'Enter') {
-        console.log(compare());
+        // console.log(compare());
+        send(compare())
     }
     else {
         //send(key);

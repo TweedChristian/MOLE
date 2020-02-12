@@ -43,14 +43,22 @@ def parseCommandMessage(message):
     print("command message")
 
     # Get everything out of the message
-    boringSpeed = message['boringSpeed']
-    extensionRate = message['extensionRate']
+    boringSpeed = int(message['boringSpeed'])
+    extensionRate = int(message['extensionRate'])
     inflateFront = message['inflateFront']
     inflateBack = message['inflateBack']
-    turningX = message['turningX']
-    turningY = message['turningY']
-
-    print(boringSpeed, extensionRate, inflateFront, inflateBack, turningX, turningY)
+    turningX = float(message['turningX'])
+    turningZ = float(message['turningZ'])
+    if(inflateFront == True):
+        inflateFront = 1
+    else:
+        inflateFront = 0
+    if(inflateBack == True):
+        inflateBack = 1
+    else:
+        inflateBack = 0
+    print(type(inflateFront))
+    print(boringSpeed, extensionRate, inflateFront, inflateBack, turningX, turningZ)
 
     arduino.write('0')
     arduino.write(chr(boringSpeed))
@@ -58,7 +66,7 @@ def parseCommandMessage(message):
     arduino.write(chr(inflateFront))
     arduino.write(chr(inflateBack))
     arduino.write(chr(int(turningX*10)))
-    arduino.write(chr(int(turningY*10)))
+    arduino.write(chr(int(turningZ*10)))
     arduino.write('\n')
 
     
