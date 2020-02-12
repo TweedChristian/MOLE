@@ -41,6 +41,8 @@ void loop() {
         Serial.write(',');
         Serial.print(turningY);
         Serial.write('\n');
+        blink(boringSpeed);
+
       }
       message = "";
 //      analogWrite(30, 20);
