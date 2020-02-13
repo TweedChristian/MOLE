@@ -129,12 +129,18 @@ serve.listen(port); //7084
 //  <<<
 server.listen(process.env.PORT || frontPort); //3000
 
-setTimeout(function(){
-    console.log('slow');
-   // serve.close()
-    server.close();
-}, 100000)
+// setTimeout(function(){
+//     console.log('slow');
+//    // serve.close()
+//     server.close();
+// }, 100000)
 
+process.on('SIGTERM', () => {
+    serve.close();
+    server.close();
+    console.log("Exit time");
+    process.exit();
+})
 
 /** 
 let s = net.Socket();

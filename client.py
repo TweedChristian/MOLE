@@ -120,7 +120,12 @@ while 1:
         exit()
     print('Received') 
     print(data)
-    x = json.loads(data)
+    try:
+        x = json.loads(data)
+    except:
+        if(data == ""):
+            print("Empty message sent by server, closing")
+            exit()
     try:
         messageType = x['type']
     except KeyError, e:
