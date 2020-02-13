@@ -10,7 +10,9 @@ let port = 7086;
 let received = 0;
 let dir = ''
 
-//startNetServer();
+// >>>>
+startNetServer();
+// <<<<<
 
 const server = http.createServer(function(request, response){
     console.log(request.method);
@@ -65,7 +67,10 @@ function handlePost(request, response){
         //TODO: switch later based on json.type
         let status = handleControls(JSON.parse(dataString));
         //SEND TO NET
-        //sendToDataLayer(dataString);
+        // >>>>>>>>>>>>>>>>>>>>
+        console.log("hello");
+        sendToDataLayer(dataString);
+        // <<<<<<<<<<<<<<<<<<<<<
         response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
         response.end(JSON.stringify(status), 'utf-8');
     })
@@ -96,33 +101,32 @@ function handleOtherRequest(response){
     response.end();
 }
 
-// function startNetServer(){
-//     console.log('Net Server Started');
-//     serve = net.createServer(function(soc) {
-//         socket = soc;
-//     });
-// }
+function startNetServer(){
+    console.log('Net Server Started');
+    serve = net.createServer(function(soc) {
+        socket = soc;
+    });
+}
 
-// function sendToDataLayer(obj){
-//     let validChars = ['w', 'a', 's', 'd'];
-//     let val = JSON.parse(obj);
-//     if(!validChars.includes(val.character)){
-//         return;
-//     }
-//     try{
-//         socket.write(val.character);
-//         // console.log(obj);
-//         socket.on('data', function(data){
-//             // console.log(data.toString());
-//             serve.close();
-//         })
-//     }
-//     catch(error){
-//         console.log(error);
-//     }
-// }
-
-//serve.listen(port); //7084
+//im uncommenting this 
+function sendToDataLayer(obj){
+    let validChars = ['w', 'a', 's', 'd'];
+    let val = JSON.parse(obj);
+    try{
+        socket.write(JSON.stringify(val));
+        // console.log(obj);
+        socket.on('data', function(data){
+            // console.log(data.toString());
+            serve.close();
+        })
+    }
+    catch(error){
+        console.log(error);
+    }
+}
+// >>>
+serve.listen(port); //7084
+//  <<<
 server.listen(process.env.PORT || frontPort); //3000
 
 setTimeout(function(){
