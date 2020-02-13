@@ -1,6 +1,6 @@
 To start the server please run the command
 
-#! ./start.sh <Arg1>
+#! ./start.sh arg1
 
 where Arg1 is the serial port for the teensy connection.
 
