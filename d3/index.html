@@ -15,6 +15,12 @@
       <button type="button" name="sin" onclick="plotSin(600);">Plot sin</button>
       <button type="button" name="stop" onclick="stopButton();" style="background-color: #FF0000">Stop</button>
     </div>
+    <div>
+      <select id="dataSelector" onchange='dataSwitch();'>
+        <option>Dynamic Data</option>
+        <option>Test Data</option>
+      </select>
+    </div>
     <div id="visWrapper">
       <div id="dataviz"></div>
     </div>
@@ -22,7 +28,7 @@
     <script src="https://d3js.org/d3.v4.js"></script>
     <script src="d3StatusVis.js"></script>
     <script>
-      let visData = [10,20,30,50];
+      let visData = [10,20,30,50,292,293,464,123,292,405,201];
       testVisSVG = initialize("dataviz", 1000, 640, "X-Axis Data", "Y-axis data");
       plot(testData, testVisSVG, 640);
       function getInputFromBox() {
@@ -51,8 +57,19 @@
       function clearPlot(){
         testData = [];
         dataIndex = 0;
-        plot(testData, testVisSVG);
+        plot(testData, testVisSVG, 640);
         console.log(testData)
+      }
+      function dataSwitch(){
+        let selector = document.getElementById("dataSelector")
+        console.log(selector.value);
+        // clearPlot();
+        if(selector.value == "Test Data"){
+          plot(visData, testVisSVG, 600);
+        }
+        if(selector.value == "Dynamic Data"){
+          plot(testData, testVisSVG, 600);
+        }
       }
     </script>
   </body>
