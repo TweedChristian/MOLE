@@ -1,4 +1,3 @@
-
 char incomingByte = 0;
 String message;
 int boringSpeed;
@@ -23,6 +22,7 @@ void loop() {
     if(incomingByte == '\n'){
 //      Serial.print(message);
       if(message[0] == '0'){
+        /*
         boringSpeed = (int)message[1];
         extensionRate = (int)message[2];
         inflateFront = (int)message[3];
@@ -42,7 +42,8 @@ void loop() {
         Serial.print(turningY);
         Serial.write('\n');
         blink(boringSpeed);
-
+        */
+        commandMessage(message);
       }
       message = "";
 //      analogWrite(30, 20);
@@ -57,4 +58,54 @@ void blink(int count){
     digitalWrite(13, LOW);
     delay(250);
   }
+}
+
+void commandMessage(String msg){
+  Serial.write("Command Message Parsed\n");
+  boringSpeed = (int)message[1];
+  extensionRate = (int)message[2];
+  inflateFront = (int)message[3];
+  inflateBack = (int)message[4];
+  turningX = (int)message[5];
+  turningY = (int)message[6];
+  setBoringSpeed(boringSpeed);
+  setExtensionRate(extensionRate);
+  if(inflateFront == 1){
+    inflate('f');
+  }
+  if(inflateBack == 1){
+    inflate('b');
+  }
+  setTurningY(turningY);
+  setTurningX(turningX);
+}
+
+void setBoringSpeed(int spd){
+  blink(spd);
+  
+  return;
+}
+
+void setExtensionRate(int rate){
+  return;
+}
+
+void inflate(char module){
+  switch(module){
+    case 'f':
+      //code for inflating front goes here
+      break;
+    case 'b':
+      //code for inflating back goes here
+      break;
+  }
+  return;
+}
+
+void setTurningX(float angle){
+  return;
+}
+
+void setTurningY(float angle){
+  return;
 }

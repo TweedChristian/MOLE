@@ -59,14 +59,18 @@ def parseCommandMessage(message):
         inflateBack = 0
     print(type(inflateFront))
     print(boringSpeed, extensionRate, inflateFront, inflateBack, turningX, turningZ)
-
+    boringScaled = scale(0, 20, 0, 255, boringSpeed)
+    extensionScaled = scale(0, 20, 0, 255, extensionRate)
+    turningXScaled = scale(-3.5, 3.5, 0, 255, turningX)
+    turningZScaled = scale(-3.5, 3.5, 0, 255, turningZ)
+    print(boringScaled, extensionScaled, inflateFront, inflateBack, turningXScaled, turningZScaled)
     arduino.write('0')
-    arduino.write(chr(boringSpeed))
-    arduino.write(chr(extensionRate))
+    arduino.write(chr(boringScaled))
+    arduino.write(chr(extensionScaled))
     arduino.write(chr(inflateFront))
     arduino.write(chr(inflateBack))
-    arduino.write(chr(int(turningX*10)))
-    arduino.write(chr(int(turningZ*10)))
+    arduino.write(chr(turningXScaled))
+    arduino.write(chr(turningZScaled))
     arduino.write('\n')
 
     
@@ -128,7 +132,7 @@ while 1:
             exit()
     try:
         messageType = x['type']
-    except KeyError, e:
+    except KeyError:
         print("Message has no type field")
         messageType = ''
     if(messageType == 'controls'):
@@ -150,6 +154,7 @@ while 1:
         'type': 'ok'
     }
     okJSON = json.dumps(okMessage)
+    print(okJSON)
     if(sendUpstream(okJSON,s)):
         print("sent ok message")
     else:
