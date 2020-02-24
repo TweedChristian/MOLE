@@ -19,12 +19,12 @@ function main(){
     }
 
     let fovy = 30;
-    let projMat = perspective(fovy, 1, .1, 100);
+    let projMat = perspective(fovy, 1, .1, 500);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'projectionMatrix'), false, flatten(projMat));
 
     let at = vec3(0.0, 0.0, 0.0);
-    let eyePos = vec3(0.0, 0.0, 20.0);
+    let eyePos = vec3(0.0, 0.0, 150.0);
     let up = vec3(0.0, 1.0, 0.0);
 
     let viewMat = lookAt(eyePos, at, up);
@@ -50,7 +50,9 @@ function main(){
     ];
 
  //   cube();
-    parabola(5, 20);
+    //parabola(5, 20);
+ //   arc(4);
+    fixbeep();
     render();
     drawParabola();
    // animate();
@@ -79,10 +81,11 @@ let id;
 let theta = 0;
 
 function animate(){
-    theta += 10;
+    theta += 0.7;
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(rotateY(theta)));
-    gl.drawArrays(gl.TRIANGLES, 0, points.length);
+   // gl.drawArrays(gl.TRIANGLES, 0, points.length);
+    gl.drawArrays(gl.LINES, 0, points.length);
     id = requestAnimationFrame(animate);
 }
 
@@ -114,6 +117,120 @@ function quad(a, b, c, d) {
     }
 }
 
+function fixbeep(){
+    //start at -5
+    points.push(vec4(-20,0.0,0.0,1.0));
+    points.push(vec4(-20,4.0,0.0,1.0));
+    colors.push(colorSelection[7]);
+    colors.push(colorSelection[8]);
+    let tempX, tempY;
+    for(let i=0; i < 52; i++){
+        let x, y;
+        if(i === 0){
+            x = genX(i, -20);
+            y = genY(i, 0);
+            tempX = x;
+            tempY = y;
+        }
+        else{
+            x = genX(i, tempX);
+            y = genY(i, tempY);
+            tempX = x;
+            tempY = y;
+        }
+        let x2 = genX(i+1, x);
+        let y2 = genY(i+1, y);
+        points.push(vec4(x, y, 0.0, 1.0));
+        points.push(vec4(x2, y2, 0.0, 1.0));
+        colors.push(colorSelection[7]);
+        colors.push(colorSelection[8]);
+    }
+
+    points.push(vec4(-200,0.0,0.0,1.0));
+    points.push(vec4(200,0.0,0.0,1.0));
+    colors.push(colorSelection[12]);
+    colors.push(colorSelection[12]);
+    console.log(points);
+}
+
+function genX(i, prevX){
+    oldX = JSON.parse(JSON.stringify({val: prevX})).val;
+    let res = (4 *Math.cos((90 - (i * 6)) * Math.PI / 180)) + oldX
+    return res;
+}
+
+function genY(i, prevY){
+    oldY = JSON.parse(JSON.stringify({val: prevY})).val;
+    return (4 * Math.sin((90 - (i * 6)) * Math.PI / 180)) + oldY;
+}
+
+// function test(){
+//    // let pts = [];
+//     points.push(vec4(-5,-4,0.0,1.0));
+//     colors.push(colorSelection[8]);
+//     let ang = 3.5;
+//     let rad = (ang) * Math.PI / 180;
+//     let x = 4 * Math.cos(rad) + points[0][0];
+//     let y = 4 * Math.sin(rad) + points[0][1];
+//     colors.push(colorSelection[6]);
+//     points.push(vec4(x,y,0.0,1.0));
+//     for(let i=1;i<100;i++){
+//         let rad = (ang * i) * Math.PI / 180;
+//         let x = 4 * Math.cos(rad) + points[i-1][0];
+//         let y = 4 * Math.sin(rad) + points[i-1][1];
+//         colors.push(colorSelection[6]);
+//         points.push(vec4(x,y,0.0,1.0));
+//         let rad2 = (ang * (i + 1)) * Math.PI / 180;
+//         let x2 = 4 * Math.cos(rad2) + points[i][0];
+//         let y2 = 4 * Math.sin(rad2) + points[i][1];
+//         colors.push(colorSelection[8]);
+//         points.push(vec4(x2,y2,0.0,1.0));
+//     }
+//     console.log(points);
+// }
+
+function arc(radius){
+    let count = 60;
+    let segAngle = 180 / count;
+    for(let i = 0; i < count; i++){
+        let angle = segAngle * i;
+        let x = Math.cos(angle * Math.PI / 180) * radius;
+        let y = Math.sqrt(Math.pow(radius, 2) - Math.pow(x, 2));
+        let angle2 = segAngle * (i + 1);
+        let x2 = Math.cos( angle2 * Math.PI / 180) * radius;
+        let y2 = Math.sqrt( Math.pow(radius, 2) - Math.pow(x2, 2));
+        points.push(vec4(x, y, 0.0, 1.0));
+        colors.push(colorSelection[3]);
+        points.push(vec4(x2, y2, 0.0, 1.0));
+        colors.push(colorSelection[5]);
+        // points.push(vec4(0.0, 0.0, 0.0, 1.0));
+        // colors.push(colorSelection[6]);
+        // points.push(vec4(x, y, 0.0, 1.0));
+        // colors.push(colorSelection[7]);
+        // points.push(vec4(0.0,0.0,0.0, 1.0));
+        // colors.push(colorSelection[6]);
+        // points.push(vec4(x2, y2, 0.0, 1.0));
+        // colors.push(colorSelection[7]);
+    }
+    console.log(points);
+}
+
+// function arc(radius){
+//     let splitCount = 3;
+//     let segment = (radius * 2 * Math.PI) / splitCount;
+//     for(let i=0; i < splitCount; i++){
+//         x = -radius + (i * segment);
+//         y = Math.sqrt((radius * radius) - (x * x));
+//         points.push(vec4(x, y, 0.0, 1.0));
+//         colors.push(colorSelection[3]);
+//         x2 = -radius + ((i+1) * segment);
+//         y2 = Math.sqrt((radius * radius) - (x2 * x2));
+//         points.push(vec4(x2, y2, 0.0, 1.0));
+//         colors.push(colorSelection[2]);
+//     }
+//     console.log(points);
+// }
+
 
 function parabola(distance, degreesOfMotion){
     let segment = distance / 1000;
@@ -136,7 +253,7 @@ function parabola(distance, degreesOfMotion){
 
 function drawParabola(){
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(translate(0,0,0)));
+    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(translate(-45.0,-45.0,-120.0)));
     gl.drawArrays(gl.LINES, 0, points.length);
 }
 
