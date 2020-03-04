@@ -4,17 +4,19 @@ const margin = {top: 10, right: 30, bottom: 30, left: 60}
 
 let dataset = 0;
 let dataIndex = 0;
-let altData = [12,133,60,346,487,128,112,90,243,457,234];
+let altData = [0.2,0.1,0,1, -0.2];
 let testData = new Array();
+let VERTICAL_OFFSET = 30;
 
 let colorScale = d3.scaleLinear()
 	.domain([0, 500])
 	.range([0,1]);
 
 let color2 = d3.scaleLinear()
-	.domain([0,500])
+	.domain([-1,1])
 	.range(['blue', 'red']);
 let intervalFN;
+let heightScale;
 
 
 
@@ -26,7 +28,7 @@ function initialize(svgName, width, height, xAxis, yAxis){
     .append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
-        .attr("style", "background-color: #f0f0f0")
+        .attr("style", "background-color: #f0f0f0; margin:10px")
     // .append("g")
     //     .attr("transform", "translate("+ margin.left + "," + margin.top + ")")  
         
@@ -43,7 +45,15 @@ function initialize(svgName, width, height, xAxis, yAxis){
         .attr('x', '50%')
         .attr('y', svgHeight)
         .attr('font-size', '20px')
-        .attr('text-anchor', 'middle');
+		.attr('text-anchor', 'middle');
+	heightScale = d3.scaleLinear()
+		.domain([-1,1])
+		.range([600,0]);
+	let heightAxis = d3.axisLeft(heightScale);
+	
+	svg.append("g")
+		.attr("transform", "translate(60,"+VERTICAL_OFFSET +")")
+		.call(heightAxis);
     return svg;
 }
 function plot(plotData, plotSVG, height){
@@ -62,7 +72,7 @@ function plot(plotData, plotSVG, height){
 	circle.enter() //create circles
 		.append("circle")
 		.attr('cx', function(d, i){
-			return 10 + (10 * i);
+			return 60 + (2*circleRadius * i);
 		})
 		.attr('r', circleRadius)
 		.attr('fill-opacity', 0)
@@ -70,14 +80,16 @@ function plot(plotData, plotSVG, height){
 			return color2(plotData[i]);
 		})
 		.attr('cy', function(d, i) {
-			return height - (plotData[i] + 2 * circleRadius)
+			// return height - (plotData[i] + 2 * circleRadius)
+			return 30 + heightScale(plotData[i]);
 		})
 		.transition()
 			.attr('fill-opacity',1)
 
 	circle.transition() //update circles position if data changes
 		.attr('cy', function(d, i) {
-			return height - (plotData[i] + 2 * circleRadius)
+			//return height - (plotData[i] + 2 * circleRadius)
+			return VERTICAL_OFFSET + heightScale(plotData[i]);
 		})
 		.attr('fill', function(d,i){
 			return color2(plotData[i])
@@ -87,25 +99,26 @@ function plot(plotData, plotSVG, height){
 	line.enter()
 		.append("line")
 		.attr('x1', function(d, i){
-			return (i * (2*circleRadius));
+			if(i != 0){
+				return (50 + (2*circleRadius*i));
+			}
+			else{
+				return(60 + (2*circleRadius*i));
+			}
 		})
 		.attr('y1', function(d,i) {
 			if(i != 0){
-				return height -(plotData[i-1] + (2* circleRadius))
+				return VERTICAL_OFFSET + heightScale(plotData[i-1]);
 			}
 			else{
-				return height -(plotData[i] + (2* circleRadius))
+				return VERTICAL_OFFSET + heightScale(plotData[i]);
 			}
 		})
 		.attr('x2', function(d , i){
-			return i * (2*circleRadius);
+			return 60 + (2*circleRadius * i);
 		})
 		.attr('y2', function(d,i) {
-			return height -(plotData[i] + (2* circleRadius))
-		})
-		.transition()
-		.attr('x2', function(d,i){
-			return (i+1) * (2 * circleRadius);
+			return VERTICAL_OFFSET + heightScale(plotData[i]);
 		})
 		.attr('stroke-width', 1)
 		.attr('stroke', function(d, i) { return color2(plotData[i])})
@@ -113,21 +126,26 @@ function plot(plotData, plotSVG, height){
 	line.transition()
 		.duration(DATA_INTERVAL)
 		.attr('x1', function(d, i){
-			return (i * (2*circleRadius));
+			if(i != 0){
+				return 50 + (i * (2*circleRadius));
+			}
+			else{
+				return (60 + (i * circleRadius * 2));
+			}
 		})
 		.attr('y1', function(d,i) {
 			if(i != 0){
-			return height -(plotData[i-1] + (2* circleRadius))
+				return VERTICAL_OFFSET + heightScale(plotData[i-1]);
 			}
 			else{
-			return height -(plotData[i] + (2* circleRadius))
+				return VERTICAL_OFFSET + heightScale(plotData[i]);
 			}
 		})
-		.attr('x2', function(d,i){
-			return (i + 1) * (2 * circleRadius);
-		})
+		// .attr('x2', function(d,i){
+		// 	return ((i + 1) * (2 * circleRadius))+60;
+		// })
 		.attr('y2', function(d,i) {
-			return height - (plotData[i] + (2*circleRadius))
+			return VERTICAL_OFFSET + heightScale(plotData[i]);
 		})
 		.attr('stroke-width', 1)
 		.attr('stroke', function(d, i) { return color2(plotData[i])})
