@@ -9,19 +9,8 @@ let obstaclePoints = [];
 
 let colorSelection;
 
-/**Curves can be generated with 12 cases. This stores a curve's important information
- * @param Direction is the axis the curve is moving along([x,y,z])
- * @param Translation is the movement from the origin to a point in space ([x,y,z])
- * @param Rotation is the degrees the curve is rotated around that axis. 0 is the negative of the axis (-90, 0, 90, 180)
- * @param Points are the line segments composing the curve.
- * A point's orientation can be determined by 
- */
-function curve(direction, translation, rotation, points) {
-    this.direction = direction;
-    this.translation = translation;
-    this.rotation = rotation;
-    this.points = points;
-}
+let segDist = 4;
+//let segDist = 0.51825575467;
 
 function main() {
     let canvas = document.getElementById("Canvas");
@@ -64,11 +53,91 @@ function main() {
     ];
     //   cube();
     //parabola(5, 20);
-  //  angleSubdivisionGeneration(idealRadius(6,4));
-    outsideAngleGeneration();
-    render();
-    draw();
+    //  angleSubdivisionGeneration(idealRadius(6,4));
+    // outsideAngleGeneration();
+    // render();
+    // draw();
     // animate();
+
+    lineRotation(1, 1, 2, 3, 4);
+}
+
+/**Curves can be generated with 12 cases. This stores a curve's important information
+ * @param Direction is the axis the curve is moving along([x,y,z])
+ * @param Translation is the movement from the origin to a point in space ([x,y,z])
+ * @param Rotation is the degrees the curve is rotated around that axis. 0 is the negative of the axis (-90, 0, 90, 180)
+ * @param Points are the line segments composing the curve.
+ * A point's orientation can be determined by 
+ */
+function curve(direction, translation, rotation, points) {
+    this.direction = direction;
+    this.translation = translation;
+    this.rotation = rotation;
+    this.points = points;
+}
+
+function lineRotation(x0, y0, x1, y1, d) {
+    let m = (y1 - y0) / (x1 - x0);
+    let x2Plus = (x1 + (Math.pow(m, 2) * x1) + (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2));
+    let x2Minus = (x1 + (Math.pow(m, 2) * x1) - (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2));
+    let y2Plus = (m * (x2Plus - x1)) + y1;
+    let y2Minus = (m * (x2Minus - x1) + y1);
+    let m2Plus = (y2Plus - y1) / (x2Plus - x1);
+    let m2Minus = (y2Minus - y1) / (x2Minus - x1);
+    console.log(`Plus method: x: ${x2Plus} y: ${y2Plus} m: ${m2Plus}`);
+    let dPlus = distance(x1, y1, x2Plus, y2Plus, true);
+    console.log(`Minus method: x: ${x2Minus} y: ${y2Minus} m:${m2Minus}`);
+    let dMinus = distance(x1, y1, x2Minus, y2Minus, true);
+}
+
+/**Calculates a third point a distance (d) down the line determined by the first two points
+ * Note: Since the determination of the third x coordinate is done with the quadratic equation, 
+ * we have +/- d to find the new x coordinate. If the line is oriented towards Q1 or Q4, then we
+ * use +d, otherwise -d
+ * @param {float} x0 
+ * @param {float} y0 
+ * @param {float} x1 
+ * @param {float} y1 
+ * @param {float} d 
+ * @param {bool} log
+ * @returns [x2,y2]
+ */
+function extendLine(x0, y0, x1, y1, d, log) {
+
+    let x2, y2, m;
+
+    let isQ1orQ4 = false;
+    if (x1 - x0 > 0) {
+        isQ1orQ4 = true;
+    }
+
+    m = (y1 - y0) / (x1 - x0);
+
+    if (isQ1orQ4) {
+        x2 = (x1 + (Math.pow(m, 2) * x1) + (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2));
+        y2 = (m * (x2 - x1) + y1);
+
+        if (log) {
+            console.log(
+            `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
+            The previous points are x0: ${x0}, y0: ${y0}, x1: ${x1}, y1: ${y1}, and the distance is ${d}.`
+            );
+        }
+
+        return [x2, y2];
+    }
+
+    x2 = (x1 + (Math.pow(m, 2) * x1) - (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2))
+    y2 = (m * (x2 - x1) + y1);
+
+    if (log) {
+        console.log(
+        `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
+        The previous points are x0: ${x0}, y0: ${y0}, x1: ${x1}, y1: ${y1}, and the distance is ${d}.`
+        );
+    }
+
+    return [x2, y2];
 }
 
 /**Returns a radius based on an ideal formula of r = sqrt( d ^ 2 / 2 * (1 - cos(ang)))
@@ -76,42 +145,11 @@ function main() {
  * @param {int} count The amount of times to divide the semicircle by
  * @param {int} segDist The distance of the extension
  */
-function idealRadius(count, segDist){
+function idealRadius(count, segDist) {
     let ang = 180 / count;
-    let radius = Math.sqrt(Math.pow(segDist, 2) / 
-    2 / (1 - (Math.cos(ang * Math.PI / 180)) ) );
-    console.log(radius);
+    let radius = Math.sqrt(Math.pow(segDist, 2) /
+        2 / (1 - (Math.cos(ang * Math.PI / 180))));
     return radius
-}
-
-function render() {
-    var cbuf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cbuf);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
-
-    var cPosition = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(cPosition, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(cPosition);
-
-    var vbuf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
-
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-}
-
-let id;
-let theta = 0;
-
-function animate() {
-    theta += 0.7;
-    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(rotateY(theta)));
-    // gl.drawArrays(gl.TRIANGLES, 0, points.length);
-    gl.drawArrays(gl.LINES, 0, points.length);
-    id = requestAnimationFrame(animate);
 }
 
 function cube() {
@@ -142,8 +180,6 @@ function quad(a, b, c, d) {
     }
 }
 
-//let segDist = 0.51825575467;
-let segDist = 4;
 
 function outsideAngleGeneration() {
     //start at -5
@@ -209,31 +245,6 @@ function genY(i, prevY) {
     oldY = JSON.parse(JSON.stringify({ val: prevY })).val;
     return (segDist * Math.sin((90 - (i * 60)) * Math.PI / 180)) + oldY;
 }
-
-// function test(){
-//    // let pts = [];
-//     points.push(vec4(-5,-4,0.0,1.0));
-//     colors.push(colorSelection[8]);
-//     let ang = 3.5;
-//     let rad = (ang) * Math.PI / 180;
-//     let x = 4 * Math.cos(rad) + points[0][0];
-//     let y = 4 * Math.sin(rad) + points[0][1];
-//     colors.push(colorSelection[6]);
-//     points.push(vec4(x,y,0.0,1.0));
-//     for(let i=1;i<100;i++){
-//         let rad = (ang * i) * Math.PI / 180;
-//         let x = 4 * Math.cos(rad) + points[i-1][0];
-//         let y = 4 * Math.sin(rad) + points[i-1][1];
-//         colors.push(colorSelection[6]);
-//         points.push(vec4(x,y,0.0,1.0));
-//         let rad2 = (ang * (i + 1)) * Math.PI / 180;
-//         let x2 = 4 * Math.cos(rad2) + points[i][0];
-//         let y2 = 4 * Math.sin(rad2) + points[i][1];
-//         colors.push(colorSelection[8]);
-//         points.push(vec4(x2,y2,0.0,1.0));
-//     }
-//     console.log(points);
-// }
 
 function angleSubdivisionGeneration(radius) {
     let count = 6;
@@ -307,12 +318,12 @@ function angleSubdivisionGeneration(radius) {
 
 
 /**A helper function to calculate distances between points. It deep copies the points to avoid trashing an array
- * 
- * @param {*} xi is the x coordinate of the initial point
- * @param {*} yi is the y coordinate of the initial point
- * @param {*} xf is the x coordinate of the final point
- * @param {*} yf is the y coordinate of the final point
+ * @param {*} xi
+ * @param {*} yi 
+ * @param {*} xf 
+ * @param {*} yf
  * @param {boolean} log is whether or not the user wants to log the result
+ * @returns distance
  */
 function distance(xi, yi, xf, yf, log) {
     xfDeep = JSON.parse(JSON.stringify({ val: xf })).val;
@@ -323,26 +334,120 @@ function distance(xi, yi, xf, yf, log) {
     if (log) {
         console.log(`Distance between point (${xf}, ${yf}) and ( ${xi}, ${yi}) is ${distance}`);
     }
-    return distance
+    return distance;
 }
 
-function parabola(distance, degreesOfMotion) {
-    let segment = distance / 1000;
-    let depth = distance * Math.tan(degreesOfMotion * Math.PI / 180) / 2;
-    let a = 4 * depth / (distance * distance);
-    let b = -4 * depth / distance;
-    let y;
-    let x;
-    for (let i = 0; i < 1000; i++) {
-        x = i * segment;
-        y = (a * x * x) + (b * x);
-        points.push(vec4(x, y, 0.0, 1.0));
-        colors.push(colorSelection[5]);
-        x2 = (i + 1) * segment;
-        y2 = (a * x2 * x2) + (b * x2);
-        points.push(vec4(x2, y2, 0.0, 1.0));
-        colors.push(colorSelection[5]);
+/**Determines the angle between two points based on the 2d rotation matrix.
+ * Note: If the denominator is 0, then we either have 90 or 270 degrees, 
+ * but if the numerator is not +- 1, then we have a bug
+ * @param {*} x0 
+ * @param {*} y0 
+ * @param {*} x1 
+ * @param {*} y1 
+ * @param {*} log 
+ * @returns Theta in degrees
+ */
+function angleBetweenTwoPoints(x0,y0,x1,y1,log){
+    let numerator = (y1 * x0) - (x1 * y0);
+    let denominator = (x0 * x1) + (y0 * y1);
+    let result;
+
+    if(denominator === 0){
+
+        //Either 90, 270, or bug
+        if(numerator === 1){
+            result = 90;
+        }
+
+        else if(numerator === -1){
+            result =  270;
+        }
+
+        else{
+            throw console.error('Undefined error, divided a number by 0 that was not +- 1');
+        }
     }
+
+    else{
+        result = Math.atan(numerator / denominator);
+    }
+
+    //Testing to see if this was a valid rotation
+    let testPoints = apply2dRotation(x0,y0,result);
+    
+    if(x1 === testPoints[0] && y1 === testPoints[1]) {
+        throw console.error('This was a valid rotation');
+    }
+
+    if(log){
+        console.log(`Rotation between A: (${x0}, ${y0}) to B: (${x1}, ${y1}) is of ${result} degrees`);
+    }
+
+    return result;
+}
+
+/**Takes a rotation matrix and multiplies a vector by it. This is for 2d rotations only.
+ * @param {*} x 
+ * @param {*} y 
+ * @param {*} theta is in degrees
+ * @returns [x,y] as the new coordinates
+ */
+function apply2dRotation(x,y, theta){
+    let rads = Math.PI * theta / 180;
+    let rotatedX = (x * Math.cos(rads)) - (y * Math.sin(rads));
+    let rotatedY = (x * Math.sin(rads)) + (y * Math.cos(rads));
+    return [rotatedX, rotatedY];
+}
+
+/**Finds the four coefficients for the the equation ax + by + cz + d = 0
+ * @param {[x,y,z]} p is point 1 of the plane
+ * @param {[x.y,z]} q is point 2 of the plane
+ * @param {[x,y,z]} r is point 3 of the plane
+ * @throws err if p,q, or r are less than 3 values.
+ * @returns the array [a,b,c,d]
+ */
+function findPlaneCoefficients(p, q, r) {
+
+    if (p.length > 3 || q.length > 3 || r.length > 3) {
+        throw err;
+    }
+
+    //S and T are the two vectors from which we get a cross product
+    let s = [(p[0] - q[0]), (p[1] - q[1]), (p[2] - q[2])];
+    let t = [(r[0] - q[0]), (r[1] - q[1]), (r[2] - q[2])];
+
+    let a = ((s[1] * t[1]) - (s[2] * t[2]));
+    let b = ((s[2] * t[0]) - (s[0] * t[2]));
+    let c = ((s[0] * t[1]) - (s[1] * t[0]));
+
+    let d = -((a * p[0]) + (b * p[1]) + (c * p[2]));
+
+    return [a, b, c, d];
+}
+
+/**Takes a plane: ax + by + cz + d = 0 and finds 
+ */
+function projectToXY(p, q, r) {
+    console.log(`P: ${p}`);
+    console.log(`Q: ${q}`);
+    console.log(`R: ${r}`);
+
+    let plane = findPlaneCoefficients(p, q, r);
+    console.log(`${plane[0]}x + ${plane[1]}y + ${plane[2]}z + ${plane[3]} = 0`);
+
+    let hyp = Math.pow(a, 2) + Math.pow(b, 2) + Math.pow(c, 2);
+    let sqhyp = Math.sqrt(hyp);
+
+    let cosTheta = c / sqhyp;
+    let sinTheta = Math.sqrt((Math.pow(a, 2) + Math.pow(b, 2)) / hyp);
+    let u1 = b / sqhyp;
+    let u2 = -a / sqhyp;
+
+    let R = [
+        [(cosTheta + (Math.pow(u1, 2) * (1 - cosTheta))), (u1 * u2 * (1 - cosTheta)), (u2 * sinTheta)],
+        [],
+        []
+    ];
 }
 
 function draw() {
@@ -350,6 +455,36 @@ function draw() {
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(translate(0, 0, 0)));
     gl.drawArrays(gl.LINES, 0, points.length);
+}
+
+function render() {
+    var cbuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cbuf);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+
+    var cPosition = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(cPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(cPosition);
+
+    var vbuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
+
+    var vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+}
+
+let id;
+let theta = 0;
+
+function animate() {
+    theta += 0.7;
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelMatrix'), false, flatten(rotateY(theta)));
+    // gl.drawArrays(gl.TRIANGLES, 0, points.length);
+    gl.drawArrays(gl.LINES, 0, points.length);
+    id = requestAnimationFrame(animate);
 }
 
 //For now render obstacles as boxes
