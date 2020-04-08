@@ -12,6 +12,14 @@ MAX_BORE = 2000
 MIN_TURN = -3.5
 MAX_TURN = 3.5
 
+'''
+* Regularizes a value between the given domain to be within the given range
+* @Param {number} domainMin 
+* @Param {number} domainMax
+* @Param {number} rangeMin
+* @Param {number} rangeMax
+* @Param {number} value
+'''
 def scale(domainMin, domainMax, rangeMin, rangeMax, value):
     if(value < domainMin or value > domainMax):
         print("Cannot scale, value ", value, "is out of range")
@@ -23,7 +31,11 @@ def scale(domainMin, domainMax, rangeMin, rangeMax, value):
         value = value + scale
     scaled = (float(value) / float(domainMax)) * float(rangeMax)
     return int(scaled)
-
+'''
+* DEPRECATED 
+* Passes a command message JSON to the ardunio, values encoded as characters
+* @Param {dict} message JSON object/dictionanry containing message keys defined in MOLES API
+'''
 def parseCommandMessage(message):
     # 000
     # True format will be 
@@ -68,7 +80,10 @@ def parseCommandMessage(message):
     arduino.write(chr(turningXScaled))
     arduino.write(chr(turningZScaled))
     arduino.write('\n')
-
+'''
+* Parses a command message JSON object/Dictionary and passes it to arduino over serial
+* @Param {dict} message ditcionary containing keys defined for command messages in MOLES API
+'''
 def parseCommandMessageStr(message):
     # Sends the command message as a string instead of chars.
     # Get everything out of the message
@@ -115,12 +130,19 @@ def parsePathMessage(message):
     roll = message['roll']
     arduino.write('1')
     
-
+'''
+* Sends a special message to the arduino to inidcate it should halt
+'''
 def emergencyStop():
     print("Bad things happening")
     arduino.write("3,!")
     # 111
-
+'''
+* Sends a message to the Node server via socket connection
+* @param {message} JSON String message to send to server
+* @param {socket} socket connection object, connected to node server
+* @returns 1 if successful, 0 otherwise
+'''
 def sendUpstream(message, socket):
     message = message.encode('ascii')
     try:
