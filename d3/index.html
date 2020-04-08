@@ -27,63 +27,7 @@
       <div id="dv2"></div>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script src="d3StatusVis.js"></script>
-    <script>
-      let dynamicDataContainer = {
-        active : true,
-        dataArray : []
-      };
-      let staticDataContainer = {
-        active: false,
-        dataArray : [-0.5,0.9,0.09,0.25,-0.3,0.5,0.1]
-      };
-      testVisSVG = initialize("dataviz", 1000, 640, "Time", "Y-axis data");
-      plot(dynamicDataContainer.dataArray, testVisSVG, 640);
-      function getInputFromBox() {
-        let box = document.getElementById("inputBoxTest");
-        console.log(box.value);
-        addData(+box.value,testVisSVG, dynamicDataContainer);
-        box.value='';
-      }
-      function addData(value, svg, dataContainer){
-        dataContainer.dataArray.push(value);
-        dataIndex += 10
-        if(dataContainer.active){
-          plot(dataContainer.dataArray, svg, 640);
-        }
-      }
-      function plotSin(height){
-        clearInterval(intervalFN)
-        intervalFN = setInterval( function(){
-          addData(Math.sin(dataIndex/100), testVisSVG, dynamicDataContainer)
-        }, DATA_INTERVAL)
-      }
-      function addRandom(){
-        clearInterval(intervalFN);
-        intervalFN = setInterval( function(){
-          addData((Math.random()-.5)*2, testVisSVG, dynamicDataContainer);
-        } , DATA_INTERVAL);
-      }
-      function clearPlot(){
-        dynamicDataContainer.dataArray = [];
-        dataIndex = 0;
-        plot([], testVisSVG, 640);
-        console.log(testData)
-      }
-      function dataSwitch(){
-        let selector = document.getElementById("dataSelector")
-        console.log(selector.value);
-        // clearPlot();
-        if(selector.value == "test"){
-          staticDataContainer.active = true;
-          dynamicDataContainer.active = false;
-          plot(staticDataContainer.dataArray, testVisSVG, 600);
-        }
-        if(selector.value == "dynamic"){
-          staticDataContainer.active = false;
-          dynamicDataContainer.active = true;
-          plot(dynamicDataContainer.dataArray, testVisSVG, 600);
-        }
-      }
-    </script>
+    <!-- The below script creates a sample visualziation used for verification puposes -->
+    <script src="sampleVis.js"></script>
   </body>
 </html>

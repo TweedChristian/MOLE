@@ -21,7 +21,15 @@ let timeScale;
 let timeScaleMax = 50;
 
 
-
+/**
+ * Initializes a visualization with blank data to a provided SVG element
+ * @param {String} svgName 	id of SVG object to draw visualization on
+ * @param {String} width  	desired width of SVG vis
+ * @param {int} height  	desired height of SVG vis
+ * @param {String} xAxis 	xAxis label
+ * @param {String} yAxis 	yAxis label
+ * @returns {selection} D3 selection of all visualization elements
+ */
 function initialize(svgName, width, height, xAxis, yAxis){
 
     let svgWidth = width+margin.left+margin.right;
@@ -69,7 +77,12 @@ function initialize(svgName, width, height, xAxis, yAxis){
 		.call(timeAxis);
     return svg;
 }
-function plot(plotData, plotSVG, height){
+/**
+ * Draws a scatter plot of the provided data to the provided plotSVG
+ * @param {Array[number]} plotData Data to be plotted
+ * @param {*} plotSVG D3 selection of plot elements to draw onto, from initialize()
+ */
+function plot(plotData, plotSVG){
 	if(plotData.length >= timeScaleMax){
 		timeScaleMax *= 2;
 		widthScale.domain([0,timeScaleMax]);
