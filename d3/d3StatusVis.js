@@ -17,6 +17,7 @@ let color2 = d3.scaleLinear()
 	.range(['blue', 'red']);
 let intervalFN;
 let heightScale;
+let timeScale;
 
 
 
@@ -50,6 +51,7 @@ function initialize(svgName, width, height, xAxis, yAxis){
 		.domain([-1,1])
 		.range([600,0]);
 	let heightAxis = d3.axisLeft(heightScale);
+	//let timeAxis = d3.axisBottom(widthScale);
 	
 	svg.append("g")
 		.attr("transform", "translate(60,"+VERTICAL_OFFSET +")")
@@ -72,7 +74,7 @@ function plot(plotData, plotSVG, height){
 	circle.enter() //create circles
 		.append("circle")
 		.attr('cx', function(d, i){
-			return 60 + (2*circleRadius * i);
+			return margin.left + (2*circleRadius * i);
 		})
 		.attr('r', circleRadius)
 		.attr('fill-opacity', 0)
@@ -81,7 +83,7 @@ function plot(plotData, plotSVG, height){
 		})
 		.attr('cy', function(d, i) {
 			// return height - (plotData[i] + 2 * circleRadius)
-			return 30 + heightScale(plotData[i]);
+			return margin.bottom + heightScale(plotData[i]);
 		})
 		.transition()
 			.attr('fill-opacity',1)
@@ -99,10 +101,10 @@ function plot(plotData, plotSVG, height){
 		.append("line")
 		.attr('x1', function(d, i){
 			if(i != 0){
-				return (50 + (2*circleRadius*i));
+				return (margin.left - (2*circleRadius) + (2*circleRadius*i));
 			}
 			else{
-				return(60 + (2*circleRadius*i));
+				return(margin.left + (2*circleRadius*i));
 			}
 		})
 		.attr('y1', function(d,i) {
@@ -114,7 +116,7 @@ function plot(plotData, plotSVG, height){
 			}
 		})
 		.attr('x2', function(d , i){
-			return 60 + (2*circleRadius * i);
+			return margin.left + (2*circleRadius * i);
 		})
 		.attr('y2', function(d,i) {
 			return VERTICAL_OFFSET + heightScale(plotData[i]);
@@ -126,10 +128,10 @@ function plot(plotData, plotSVG, height){
 		.duration(DATA_INTERVAL)
 		.attr('x1', function(d, i){
 			if(i != 0){
-				return 50 + (i * (2*circleRadius));
+				return (margin.left - 2*circleRadius) + (i * (2*circleRadius));
 			}
 			else{
-				return (60 + (i * circleRadius * 2));
+				return (margin.left + (i * circleRadius * 2));
 			}
 		})
 		.attr('y1', function(d,i) {
@@ -141,7 +143,7 @@ function plot(plotData, plotSVG, height){
 			}
 		})
 		.attr('x2', function(d,i){
-			return 60 + circleRadius*2*i;
+			return margin.left + circleRadius*2*i;
 		})
 		.attr('y2', function(d,i) {
 			return VERTICAL_OFFSET + heightScale(plotData[i]);

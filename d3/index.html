@@ -51,7 +51,7 @@
       function addRandom(){
         clearInterval(intervalFN);
         intervalFN = setInterval( function(){
-          addData(Math.floor(Math.random() * 500 ), testVisSVG);
+          addData((Math.random()-.5)*2, testVisSVG);
         } , DATA_INTERVAL);
       }
       function clearPlot(){
