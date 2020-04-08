@@ -88,7 +88,6 @@ function plot(plotData, plotSVG, height){
 
 	circle.transition() //update circles position if data changes
 		.attr('cy', function(d, i) {
-			//return height - (plotData[i] + 2 * circleRadius)
 			return VERTICAL_OFFSET + heightScale(plotData[i]);
 		})
 		.attr('fill', function(d,i){
@@ -141,9 +140,9 @@ function plot(plotData, plotSVG, height){
 				return VERTICAL_OFFSET + heightScale(plotData[i]);
 			}
 		})
-		// .attr('x2', function(d,i){
-		// 	return ((i + 1) * (2 * circleRadius))+60;
-		// })
+		.attr('x2', function(d,i){
+			return 60 + circleRadius*2*i;
+		})
 		.attr('y2', function(d,i) {
 			return VERTICAL_OFFSET + heightScale(plotData[i]);
 		})

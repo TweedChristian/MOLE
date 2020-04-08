@@ -128,6 +128,8 @@ def parseDesyncMessage(message):
 
 def parseErrorMessage(message):
     print("Error Message")
+    arduino.write('3,')
+    arduino.write('!')
     # 011
 
 def parsePathMessage(message):

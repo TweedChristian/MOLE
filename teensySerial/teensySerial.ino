@@ -42,8 +42,11 @@ void loop() {
 //    Serial.println(message[i]);    
 //  }
   index = 0;
-  if(message[0] = "0"){
+  if(message[0] == "0"){
     parseCommandMessage();
+  }
+  else if(message[0] == "3"){
+    parseErrorMessage();
   }
 
 }
@@ -76,6 +79,13 @@ void parseCommandMessage(){
   setTurningX(atof(message[5].c_str()));
   setTurningZ(atof(message[6].c_str()));
   Serial.write("~");
+}
+
+void parseErrorMessage(){
+  setBoringSpeed(0);
+  setExtensionRAte(0);
+  Serial.write("Shutting Down");
+  Serial.write("~")
 }
 
 void setBoringSpeed(int spd){
