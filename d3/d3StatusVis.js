@@ -18,13 +18,14 @@ let color2 = d3.scaleLinear()
 let intervalFN;
 let heightScale;
 let timeScale;
+let timeScaleMax = 50;
 
 
 
 function initialize(svgName, width, height, xAxis, yAxis){
 
-    let svgWidth = width;
-    let svgHeight = height;
+    let svgWidth = width+margin.left+margin.right;
+    let svgHeight = height+margin.top+margin.bottom;
     let svg = d3.select("#"+svgName)
     .append("svg")
         .attr("width", svgWidth)
@@ -50,15 +51,31 @@ function initialize(svgName, width, height, xAxis, yAxis){
 	heightScale = d3.scaleLinear()
 		.domain([-1,1])
 		.range([600,0]);
+	widthScale = d3.scaleLinear()
+		.domain([0,timeScaleMax])
+		.range([0,width]);
 	let heightAxis = d3.axisLeft(heightScale);
-	//let timeAxis = d3.axisBottom(widthScale);
+	let timeAxis = d3.axisBottom(widthScale);
 	
 	svg.append("g")
 		.attr("transform", "translate(60,"+VERTICAL_OFFSET +")")
 		.call(heightAxis);
+	console.log(height)
+	console.log(svgHeight)
+	console.log(margin)
+	svg.append("g")
+		.attr("class", "timeAxis")
+		.attr("transform", "translate("+margin.left+","+ (height - margin.top)+")")
+		.call(timeAxis);
     return svg;
 }
 function plot(plotData, plotSVG, height){
+	if(plotData.length >= timeScaleMax){
+		timeScaleMax *= 2;
+		widthScale.domain([0,timeScaleMax]);
+		plotSVG.select(".timeAxis")
+			.call(d3.axisBottom(widthScale));
+	}
 	//plot the circles
 	let circle = plotSVG
 		.selectAll("circle")
@@ -74,7 +91,10 @@ function plot(plotData, plotSVG, height){
 	circle.enter() //create circles
 		.append("circle")
 		.attr('cx', function(d, i){
-			return margin.left + (2*circleRadius * i);
+			//return margin.left + (2*circleRadius * i);
+			// console.log(plotSVG.attr('width'));
+			//return margin.left + ((i/plotData.length)*plotSVG.attr('width'))
+			return margin.left + widthScale(i)
 		})
 		.attr('r', circleRadius)
 		.attr('fill-opacity', 0)
@@ -88,9 +108,13 @@ function plot(plotData, plotSVG, height){
 		.transition()
 			.attr('fill-opacity',1)
 
-	circle.transition() //update circles position if data changes
+	circle.transition() //update circles position as data changes
+		.duration(DATA_INTERVAL*2)
 		.attr('cy', function(d, i) {
 			return VERTICAL_OFFSET + heightScale(plotData[i]);
+		})
+		.attr('cx', function(d,i){
+			return margin.left + widthScale(i)
 		})
 		.attr('fill', function(d,i){
 			return color2(plotData[i])
@@ -101,10 +125,10 @@ function plot(plotData, plotSVG, height){
 		.append("line")
 		.attr('x1', function(d, i){
 			if(i != 0){
-				return (margin.left - (2*circleRadius) + (2*circleRadius*i));
+				return (margin.left + (widthScale(i-1)));
 			}
 			else{
-				return(margin.left + (2*circleRadius*i));
+				return(margin.left + (widthScale(i)));
 			}
 		})
 		.attr('y1', function(d,i) {
@@ -116,7 +140,7 @@ function plot(plotData, plotSVG, height){
 			}
 		})
 		.attr('x2', function(d , i){
-			return margin.left + (2*circleRadius * i);
+			return margin.left + (widthScale(i));
 		})
 		.attr('y2', function(d,i) {
 			return VERTICAL_OFFSET + heightScale(plotData[i]);
@@ -125,13 +149,13 @@ function plot(plotData, plotSVG, height){
 		.attr('stroke', function(d, i) { return color2(plotData[i])})
 
 	line.transition()
-		.duration(DATA_INTERVAL)
+		.duration(DATA_INTERVAL*2)
 		.attr('x1', function(d, i){
 			if(i != 0){
-				return (margin.left - 2*circleRadius) + (i * (2*circleRadius));
+				return (margin.left + (widthScale(i-1)));
 			}
 			else{
-				return (margin.left + (i * circleRadius * 2));
+				return(margin.left + (widthScale(i)));
 			}
 		})
 		.attr('y1', function(d,i) {
@@ -143,7 +167,7 @@ function plot(plotData, plotSVG, height){
 			}
 		})
 		.attr('x2', function(d,i){
-			return margin.left + circleRadius*2*i;
+			return margin.left + widthScale(i);
 		})
 		.attr('y2', function(d,i) {
 			return VERTICAL_OFFSET + heightScale(plotData[i]);
