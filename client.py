@@ -24,19 +24,6 @@ def scale(domainMin, domainMax, rangeMin, rangeMax, value):
     scaled = (float(value) / float(domainMax)) * float(rangeMax)
     return int(scaled)
 
-
-def testMessage():
-    time.sleep(3)
-    print("Test Message")
-    # TODO
-    message = "12,3,2!"
-    sMesg = message.encode("utf-8")
-    arduino.write(sMesg)
-    while(1):
-        reply = arduino.readline()
-        if(len(reply) != 0):
-            print("arduino says: " + reply)
-
 def parseCommandMessage(message):
     # 000
     # True format will be 
@@ -104,27 +91,14 @@ def parseCommandMessageStr(message):
     sMesg += ','
     sMesg += str(turningZ)
     sMesg += '!'
-    print(sMesg)
+    print("Sending to arduino: ",sMesg)
     arduino.write(sMesg.encode('utf-8'))
-    while(1):
-        reply = arduino.readline()
-        if(len(reply) != 0):
-            print("Arduino says: " + reply)
-            if(reply == "~"):
-                print("done??????")
-                break
-
-            
-
-
-
-
-
+    
 def parseDesyncMessage(message):
     print("Desync Message")
     # 010
     arduino.write('2')
-    arduino.write('\n')
+    arduino.write('!')
 
 def parseErrorMessage(message):
     print("Error Message")
@@ -144,6 +118,7 @@ def parsePathMessage(message):
 
 def emergencyStop():
     print("Bad things happening")
+    arduino.write("3,!")
     # 111
 
 def sendUpstream(message, socket):
@@ -154,77 +129,73 @@ def sendUpstream(message, socket):
     except:
         return 0
 
-print("start of script")
-testMode = False
+if __name__ == "__main__":
 
-if(len(sys.argv) == 3 and sys.argv[2] == 'test'):
-    print("testing")
-    testMode = True
+    print("Python Data Layer Started")
 
-if(len(sys.argv) != 2 and testMode == False):
-    print("Usage: python client.py <serial port>")
-    exit()
+    if(len(sys.argv) != 2):
+        print("Usage: python client.py <serial port>")
+        exit()
 
-serialPort = sys.argv[1]
-port = 7086
-try:
-    arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
-except:
-    print("Could not establish serial connection to port " + serialPort)
-    exit()
-if(not(testMode)):
+    serialPort = sys.argv[1]
+    port = 7086
+    try:
+        arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
+    except:
+        print("Could not establish serial connection to port " + serialPort)
+        exit()
     try:
         s = socket.socket()
         s.connect(('127.0.0.1', port))
         s.sendall('jef')
     except:
         print("Could not establish socket connection to server")
-else:
-    print("test mode active")
-    testMessage()
-    print("test message sent")
-    exit()
-while 1:
-    try:
-        data = s.recv(1024)
-    except:
-        print('Socket connection closed by server')
         exit()
-    print('Received') 
-    print(data)
-    try:
-        x = json.loads(data)
-    except:
-        if(data == ""):
-            print("Empty message sent by server, closing")
+    while 1:
+        try:
+            data = s.recv(1024)
+        except:
+            print('Socket connection closed by server')
             exit()
-    try:
-        messageType = x['type']
-    except:
-        print("Malformed or Empty Message Recieved")
-        messageType = ''
-    if(messageType == 'controls'):
-        parseCommandMessageStr(x)
-    elif(messageType == 'desync'):
-        parseDesyncMessage(x)
-    elif(messageType == 'emergency'):
-        emergencyStop()
-    elif(messageType == 'Error'):
-        parseErrorMessage(x)
-    elif(messageType == 'path'):
-        parsePathMessage(x)
-    else:
-        print("Malformed message of type " + messageType + " recieved")
-    reply = arduino.readline()
-    print(type(reply))
-    print("arduino says:", reply)
-    okMessage = {
-        'type': 'ok'
-    }
-    okJSON = json.dumps(okMessage)
-    print(okJSON)
-    if(sendUpstream(okJSON,s)):
-        print("sent ok message")
-    else:
-        print("error sending ok message")
-s.close()
+        print('Received') 
+        print(data)
+        try:
+            x = json.loads(data)
+        except:
+            if(data == ""):
+                print("Empty message sent by server, closing")
+                exit()
+        try:
+            messageType = x['type']
+        except:
+            print("Malformed or Empty Message Recieved")
+            messageType = ''
+        if(messageType == 'controls'):
+            parseCommandMessageStr(x)
+        elif(messageType == 'desync'):
+            parseDesyncMessage(x)
+        elif(messageType == 'emergency'):
+            emergencyStop()
+        elif(messageType == 'Error'):
+            parseErrorMessage(x)
+        elif(messageType == 'path'):
+            parsePathMessage(x)
+        else:
+            print("Malformed message of type " + messageType + " recieved")
+        while(1):
+            reply = arduino.readline()
+            if(len(reply) != 0):
+                if(reply == "~\r\n"):
+                    print("Parsed Arduino reply")
+                    break
+                print("Arduino says: " + reply)
+        okMessage = {
+            'type': 'ok'
+        }
+        okJSON = json.dumps(okMessage)
+        print(okJSON)
+        if(sendUpstream(okJSON,s)):
+            print("sent ok message")
+        else:
+            print("error sending ok message")
+    s.close()
