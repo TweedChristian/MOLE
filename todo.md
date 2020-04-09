@@ -3,7 +3,7 @@
 _Write (done) next to completed tasks_
 
 ## Pathing: 
-1. Build new curve method using rotation matrix
+1. Build new curve method using rotation matrix (done)
 2. Construct curve around object using final curve method
 3. Merge Curve algorithm
 4. Add in Plucker coordinate calculation
@@ -22,7 +22,7 @@ _Write (done) next to completed tasks_
 4. Define API behavior functions (build what we can)
 
 ## Controls:
-1. Style
+1. Style (DONE)
 
 ## Python: 
 1. Add in Bayes curve algorithm

@@ -1,6 +1,9 @@
 /**This file is what interacts with all other libraries and organizes
 them in a 'process' */
 
+
+/** This file is the old index file - deprecated */
+
 //import path vis module
 //import data vis module
 //import pathing module
@@ -135,11 +138,30 @@ function setupControls() {
 }
 
 //TODO: Add red text for reject
-function addCommand(message) {
-    let ul = document.getElementById('logBox');
-    let li = document.createElement('li');
-    li.appendChild(document.createTextNode(message));
-    ul.appendChild(li);
+function addCommand(message, emergency) {
+    const start = document.getElementById('commandPlaceholder')
+    if(start){
+        start.remove();
+    }
+    if(emergency){
+        let ul = document.getElementById('logBox');
+        let li = document.createElement('li');
+        li.classList.add('c_controlsBlock__emergencyMessage');
+        li.appendChild(document.createTextNode(message));
+        ul.insertAdjacentElement('afterbegin', li);
+    }
+    else{
+        let ul = document.getElementById('logBox');
+        let li = document.createElement('li')
+        li.classList.add('c_controlsBlock__command');
+        li.appendChild(document.createTextNode(message))
+        ul.insertAdjacentElement('afterbegin', li);
+    }
+}
+
+function emergency(){
+    console.log("UH OH RAGGY");
+    addCommand('EMERGENCY STOP', true);
 }
 
 

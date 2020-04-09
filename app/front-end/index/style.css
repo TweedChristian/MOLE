@@ -1,0 +1,84 @@
+/* Important Top Level Styling*/
+
+body {
+    margin: auto;
+    text-align: center;
+    background-color: #3e4c5e;
+}
+
+html {
+    font-family: 'Roboto Mono', sans-serif;
+}
+
+.c_pageContainer {
+    max-width: 1440px;
+    margin: auto;
+}
+
+/* e8c547  - YELLOW */
+/* ff1053 - important red*/
+/* 3e4c5e - outer space */
+/* 93c6d6 - dark sky blue */
+/* 36484e - charcoal */
+/* 668586 - steal teal */
+/* a7acd9 - wild blue yonder */
+/* 9e8fb2 - glossy grape (maybe header?) */
+/* f9b9f2 - electric lavender */
+/* e2efde - platinum */
+/* 9f9aa4 - manatee */
+
+
+/* Nav Bar */
+.navHeader {
+    height: 48px;
+    background-color: #93c6d6;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 150px auto auto;
+    justify-items: start;
+}
+
+.navHeader h1 {
+    margin: 0;
+    height: 48px;
+    color: rgba(0,0,0,0.75);
+}
+
+.navHeader__links {
+    display: grid;
+    justify-self: start;
+    width: 100%;
+    grid-template-rows: 1fr;
+    grid-template-columns: repeat(4, auto);
+    align-items: center;
+}
+
+.navHeader__link {
+    text-decoration: none;
+    height: 48px;
+    width: 100%;
+    display: inline-block;
+}
+
+.navHeader__link:hover{
+    background-color: #516c75;
+}
+
+.navHeader__link:active, .navHeader__link:focus {
+    outline: 0;
+    border: none;
+}
+
+.navHeader__link h2 {
+    margin: 0;
+    height: 48px;
+    margin-top: 0.25rem;
+    color: rgba(0,0,0,0.75);
+}
+
+/* Page Content */
+
+.c_welcomePage__title, .c_welcomePage__content, .c_welcomePage__text {
+    color: white;
+}

@@ -1,5 +1,5 @@
 let MV = document.createElement('script');
-MV.src = './lib/MV.js';
+MV.src = '../../lib/MV.js';
 document.head.appendChild(MV);
 
 function generateCurve(obstacle){
