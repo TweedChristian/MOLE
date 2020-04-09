@@ -252,6 +252,7 @@ function handlePathing(data, response){
         //processPathing(data);
         let result = sendToDataLayer(data);
         if(result) {
+            //TODO: Switch on the type of result
             response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
             response.end(JSON.stringify(result), 'utf-8')
         }
@@ -337,3 +338,31 @@ process.on('SIGTERM', () => {
     console.log("Exit time");
     process.exit();
 })
+
+
+/** Add in file reading to save for datavis client */
+//Create a small database for persistent data
+//lodash
+
+//SessionID
+
+//Status
+
+// imuAccX[]
+// imuAccY[]
+// imuAccZ[]
+// imuYaw[]
+// imuPitch[]
+// imuRoll[]
+// boringRPM[]
+// extensionRPM[]
+// drillTemp[]
+// steeringYaw[]
+// steeringPitch[]
+// frontPSI[]
+// backPSI[]
+
+//TODO: What does pathing save
+
+
+//File Export CSV thing
