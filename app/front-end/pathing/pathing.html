@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MOLE</title>
+    <script src="pathing/pathing.js"></script>
+    <script src="/lib/webgl-utils.js"></script>
+    <script src="/lib/initShaders.js"></script>
+    <script src="/lib/MV.js"></script>
+
+    <link rel="icon" href="/assets/images/icons8-cat-96.png" type="img/png">
+    <link rel='stylesheet' type='text/css' href='pathing/style.css'>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+
+    <script id="vshader" type="x-shader/x-vertex">
+    attribute vec4 vPosition;
+    attribute vec4 vColor;
+    uniform mat4 modelMatrix;
+    uniform mat4 projectionMatrix;
+    uniform mat4 viewMatrix;
+    varying vec4 fColor;
+	void main() {
+		gl_Position =  projectionMatrix * viewMatrix * modelMatrix * vPosition;
+		fColor = vColor;
+  	}
+	</script>
+
+    <script id="fshader" type="x-shader/x-fragment">
+	precision mediump float;
+	varying vec4 fColor;
+	void main()
+	{
+		gl_FragColor = fColor;
+  	}
+	</script>
+</head>
+
+<body onload="main()">
+        <header class='navHeader'>
+            <a class='navHeader__link' href='/'>
+                <h1>MOLE</h1>
+            </a>
+            <nav class='navHeader__links'>
+                <a class='navHeader__link' href='/controls'>
+                    <h2>Controls</h2>
+                </a>
+                <a class='navHeader__link' href='/datavis'>
+                    <h2>Data Vis</h2>
+                </a>
+                <a class='navHeader__link' href='/pathing'>
+                    <h2>Pathing</h2>
+                </a>
+                <a class='navHeader__link' href='/about'>
+                    <h2>About</h2>
+                </a>
+            </nav>
+        </header>
+    <div class="c_pageContainer">
+        <h1 style="text-align: center; color: rgba(255,255,255,0.75)">Pathfinding</h1>
+        <!-- <div>
+            <form>
+                <p>Add Obstacle:</p>
+                x: <input type="text" id="x"><br>
+                y: <input type="text" id="y"><br>
+                z: <input type="text" id="z"><br>
+                length: <input type="text" id="l"><br>
+                width: <input type="text" id="w"><br>
+                height: <input type="text" id="h"><br>
+                <button onclick=addObstacle()>Add</button>
+            </form>
+        </div> -->
+        <div style="width: 100%; text-align: center;">
+            <canvas id="Canvas" width="400" height="400" style="display: inline;">Please use an updated browser that can handle the canvas tag</canvas>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <title>MOLE</title>
+    <script src="controls/controls.js"></script>
+    <link rel="icon" href="/assets/images/icons8-cat-96.png" type="img/png">
+    <link rel='stylesheet' type='text/css' href='controls/style.css'>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> 
+</head>
+
+<body onload=main()>
+    <header class='navHeader'>
+        <a class='navHeader__link' href='/'><h1>MOLE</h1></a>
+        <nav class='navHeader__links'>
+            <a class='navHeader__link' href='/controls'><h2>Controls</h2></a>
+            <a class='navHeader__link' href='/datavis'><h2>Data Vis</h2></a>
+            <a class='navHeader__link' href='/pathing'><h2>Pathing</h2></a>
+            <a class='navHeader__link' href='/about'><h2>About</h2></a>
+        </nav>
+    </header>
+    <div class="c_pageContainer">
+        <h2 class='c_controlsBlock__title'>Manual Controls</h2>
+        <div class='c_controlsBlock__controlContainer'>
+            <div class='c_controlsBlock__controls'>
+                <div class="c_controlsBlock__slidersContainer">
+                    <label class='c_controlsBlock__label' id='boringLabel'>
+                        Boring Speed: 10
+                    </label
+                    ><br>
+                    <label class='c_controlsBlock__label'>
+                        0
+                    </label>
+                    <div class='c_controlsBlock__sliderContainer'>
+                        <input class='c_controlsBlock__slider' 
+                        type='range' step='0.5' min='0' max='20' value='10' id='boring'
+                        onchange="boringLabel.innerHTML = 'Boring Speed: ' + value;">
+                    </div>
+                    <label class='c_controlsBlock__label'>
+                        20
+                    </label>
+                    <br>
+                    <label id="extLabel" class='c_controlsBlock__label'>
+                        Extension: 10
+                    </label>
+                    <br>
+                    <label class='c_controlsBlock__label'>
+                        0
+                    </label>
+                    <div class='c_controlsBlock__sliderContainer'>
+                        <input class='c_controlsBlock__slider' 
+                        type='range' id='extension' step='0.5' min='0' max='20' value='10'
+                        onchange="extLabel.innerHTML = 'Extension: ' + value">
+                    </div>
+                    <label class='c_controlsBlock__label'>
+                        20
+                    </label>
+                    <br>
+                    <label id="txLabel" class='c_controlsBlock__label'>
+                        Turning X: 0
+                    </label><br>
+                    <label class='c_controlsBlock__label'>
+                        -3.5
+                    </label>
+                    <div class='c_controlsBlock__sliderContainer'>
+                        <input class='c_controlsBlock__slider'
+                        type='range' min='-3.5' step='0.05' max='3.5' value='0.0' id='turnx'
+                        onchange="txLabel.innerHTML = 'Turning X: ' + value">
+                    </div>
+                    <label class='c_controlsBlock__label'>
+                            3.5
+                    </label>
+                    <br>
+                    <label id="tzLabel" class='c_controlsBlock__label'>
+                        Turning Z: 0
+                    </label>
+                    <br>
+                    <label class='c_controlsBlock__label'>
+                        -3.5
+                    </label>
+                    <div class='c_controlsBlock__sliderContainer'>
+                        <input class='c_controlsBlock__slider' 
+                        type='range' min='-3.5' step='0.05' max='3.5' value='0.0' id='turnz'
+                        onchange="tzLabel.innerHTML = 'Turning Z: '+ value">
+                    </div>
+                    <label class='c_controlsBlock__label'>
+                        3.5
+                    </label>
+                    <br>
+                </div>
+                <div class="c_controlsBlock__buttonsContainer">
+                    <button class="c_controlsBlock__button" onclick='inflate(0)'>
+                        <span class="c_controlsBlock__buttonText">
+                            Inflate Front
+                        </span>
+                    </button>
+                    <br>
+                    <button class="c_controlsBlock__button" onclick='inflate(1)'>
+                        <span class="c_controlsBlock__buttonText">
+                            Inflate Back</span>
+                    </button>
+                    <br>
+                    <div class="c_controlsBlock__stop">
+                        <button class="c_controlsBlock__stopButton" onclick='emergency()'>
+                            <span class="c_controlsBlock__stopText">
+                                Emergency
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class='c_controlsBlock__commandLog'>
+                <label class='c_controlsBlock__label'>
+                    <b>Command Log</b>
+                </label>
+                <div id='commandLog'>
+                    <ul id='logBox'>
+                        <li class='c_controlsBlock__command' id='commandPlaceholder'>
+                            <i>Sent commands go here</i>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
