@@ -14,7 +14,6 @@ const db = low(adapter);
 let pythonServer;
 let socket;
 let port = 7086;
-let received = 0;
 let dir = '../front-end/';
 
 /**CONTROLS
@@ -36,7 +35,8 @@ let dir = '../front-end/';
  * type: 'path',
  * yaw,
  * pitch,
- * roll
+ * roll,
+ * distance
  */
 
  /**STATUS
@@ -48,7 +48,7 @@ let dir = '../front-end/';
   * imuPitch,
   * imuRoll,
   * boringRPM,
-  * extensionRPM,
+  * extensionRate,
   * drillTemp,
   * steeringYaw,
   * steeringPitch,
@@ -56,7 +56,11 @@ let dir = '../front-end/';
   * backPSI
   */
 
+  //TODO: ADD OTHER COMMANDS FROM DB
 
+/**
+ * SERVER, DATABASE INITIALIZE FUNCTIONS
+ */
 
 //Starting the servers
 startNetServer();
@@ -74,6 +78,22 @@ const httpServer = http.createServer(function(request, response){
         handleOtherRequest(response);
     }
 })
+
+
+/**Initializes the connection to the python data layer
+ * with a TCP socket connection
+ */
+function startNetServer(){
+    pythonServer = net.createServer(function(soc) {
+        socket = soc;
+    });
+    if(pythonServer){
+        console.log('Net Server Started');
+    }
+    else{
+        console.log('Net Server Failed to Start');
+    }
+}
 
 //Checking on initialization of HTTP Server
 if(httpServer){
@@ -97,7 +117,11 @@ else{
  * @field sentControls,
  * @field controlsStatusResponses
  * @field idealPathPoints
+ * @field sentPaths
+ * @field obstacles
  * @field pathStatusResponses
+ * @field correctedPathPoints
+ * @field errors
  * @field lastUpdated
  * @field createdAt
  */
@@ -105,16 +129,43 @@ function initializeDb() {
     db.defaults(
         {
             sentControls: [],
-            controlsStatusResponses: [],
+            controlsStatusResponses: {
+                driftX: [],
+                driftY: [],
+                driftZ: []
+            },
+
             idealPathPoints: [],
+            sentPaths: [],
+            obstacles: [],
             correctedPathPoints: [],
-            pathStatusResponses: [],
+            pathStatusResponses: {
+                imuAccX: [],
+                imuAccY: [],
+                imuAccZ: [],
+                imuYaw: [],
+                imuPitch: [],
+                imuRoll: [],
+                boringRPM: [],
+                extensionRate: [],
+                drillTemp: [],
+                steeringYaw: [],
+                steeringPitch: [],
+                frontPSI: [],
+                backPSI: []
+            },
+            errors: [],
             lastUpdated: Date.now(),
             createdAt: Date.now()
         }
     )
     .write(); 
 }
+
+
+/**
+ * HTTP FUNCTIONS
+ */
 
 /**Takes a GET request from a client, and then checks whether or not
  * the file is in one of our folders, and responds with the appropriate
@@ -189,8 +240,6 @@ function handlePost(request, response){
     });
 
     request.on('end', function(){
-        console.log("REQUEST SPOT");
-        console.log(JSON.parse(dataString));
         let dataJSON = JSON.parse(dataString);
         if(dataJSON){
             switch(dataJSON.type){
@@ -203,6 +252,22 @@ function handlePost(request, response){
                 case 'path':
                     handlePathing(dataJSON, response);
                     break;
+                case 'compile':
+                    handleCompile(dataJSON, response);
+                    break;
+                case 'pathInitialize':
+                    handlePathInitialize(dataJSON, response);
+                    break;
+                case 'correctPath':
+                    handleCorrectPath(dataJSON, response);
+                    break;
+                case 'addObstacle': 
+                    handleAddObstacle(dataJSON, response);
+                    break;
+                    //TODO: Talk with tom about whether or not to send the whole db
+                case 'dataVisRequest':
+                    handleDataVisRequest(dataJSON, response);
+                    break;
                 default:
                     response.writeHead(400, 'Incorrect Command', {'Content-Type': 'text/plain'});
                     response.end('Your POST request did not follow the typing conventions');
@@ -212,12 +277,30 @@ function handlePost(request, response){
             response.writeHead(400, 'No Command', {'Content-Type': 'text/plain'});
             response.end('Your POST request did not contain any command information.');
         }
-        //SEND TO NET
-        // console.log("hello");
-        // sendToDataLayer(dataString);
-        // response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
-        // response.end(JSON.stringify(status), 'utf-8');
-    })
+    });
+}
+
+
+function handleCompile(dataJSON, response) {
+
+    //this will just send a csv
+    // response.end(JSON.stringify(status), 'utf-8');
+}
+
+function handlePathInitialize(dataJSON, response) {
+
+}
+
+function handleCorrectPath(dataJSON, response) {
+
+}
+
+function handleAddObstacle(dataJSON, response) {
+
+}
+
+function handleDataVisRequest(dataJSON, response) {
+
 }
 
 /**Handles the controls message, along with the status of
@@ -243,6 +326,7 @@ function handleControls(data, response){
  * @param {JSON} controls 
  */
 function processControls(controls){
+    writeToDb(data);
     //TODO: get rid of dummy data for actual polling from the arduino
     let status = {
         type: 'status',
@@ -253,7 +337,7 @@ function processControls(controls){
         imuPitch: 1.0,
         imuRoll: 0.0,
         boringRPM: 1.1,
-        extensionRPM: 1.0,
+        extensionRate: 1.0,
         drillTemp: 100,
         steeringYaw: 1.0,
         steeringPitch: 10.0,
@@ -270,6 +354,7 @@ function processControls(controls){
  * @param response is the response we will send
  */
 function handleError(data, response){
+    writeToDb(data);
     console.log(data.message);
     let result = sendToDataLayer(data);
     if(result) {
@@ -289,6 +374,7 @@ function handleError(data, response){
  * @param response is the HTTP response we will send
  */
 function handlePathing(data, response){
+    writeToDb(data);
     if(data){
         console.log(data);
         //processPathing(data);
@@ -319,20 +405,12 @@ function handleOtherRequest(response){
     response.end();
 }
 
-/**Initializes the connection to the python data layer
- * with a TCP socket connection
+
+/**
+ * DATA LAYER FUNCTIONS
  */
-function startNetServer(){
-    pythonServer = net.createServer(function(soc) {
-        socket = soc;
-    });
-    if(pythonServer){
-        console.log('Net Server Started');
-    }
-    else{
-        console.log('Net Server Failed to Start');
-    }
-}
+
+
 
 /**Converts our JSON object to a string and sends it over the net server's socket to 
  * communicate with the python client
@@ -360,6 +438,9 @@ function sendToDataLayer(json){
     }
 }
 
+
+
+
 /**Takes the response from the data layer, and maps the appropriate 
  * action with the reponse type. If the JSON is malformed, we handle it like
  * an error.
@@ -370,9 +451,6 @@ function handleDataLayerResponse(json) {
 }
 
 
-pythonServer.listen(port); //7084
-httpServer.listen(process.env.PORT || frontPort); //3000
-
 
 process.on('SIGTERM', () => {
     pythonServer.close();
@@ -382,29 +460,134 @@ process.on('SIGTERM', () => {
 })
 
 
-/** Add in file reading to save for datavis client */
-//Create a small database for persistent data
-//lodash
 
-//SessionID
+/**
+ * DATABASE FUNCTIONS
+ */
 
-//Status
+/** A function that takes a given JSON file, and 
+ * maps it to the appropriate attribute.
+ * If the type cannot match, it will add an error message
+ * @param {JSON} dataJSON 
+ */
+function writeToDb(dataJSON) {
+    switch(dataJSON.type){
 
-// imuAccX[]
-// imuAccY[]
-// imuAccZ[]
-// imuYaw[]
-// imuPitch[]
-// imuRoll[]
-// boringRPM[]
-// extensionRPM[]
-// drillTemp[]
-// steeringYaw[]
-// steeringPitch[]
-// frontPSI[]
-// backPSI[]
+        //A pathing command
+        case 'path':
+            db.get('sentPaths')
+              .push(dataJSON);
 
-//TODO: What does pathing save
+            updateDbTime();
+            break;
+
+        //Error messages
+        case 'error':
+
+            db.get('errors')
+            .push(dataJSON.message);
+
+            updateDbTime();
+            break;
+
+        //Manual Controls 
+        case 'controls':
+
+            db.get('sentControls')
+              .push(dataJSON)
+
+            updateDbTime();
+            break;
+
+        //General Machine Status received from controls
+        case 'status':
+
+            let currentState = db.get('controlsStatusResponses').value();
+
+            currentState.imuAccX.push(dataJSON.imuAccX);
+            currentState.imuAccY.push(dataJSON.imuAccY);
+            currentState.imuAccZ.push(dataJSON.imuAccZ)
+            currentState.imuPitch.push(dataJSON.imuPitch);
+            currentState.imuRoll.push(dataJSON.imuRoll);
+            currentState.imuYaw.push(dataJSON.imuYaw);
+            currentState.drillTemp.push(dataJSON.drillTemp);
+            currentState.extensionRate.push(dataJSON.extensionRate);
+            currentState.steeringPitch.push(dataJSON.steeringPitch);
+            currentState.steeringYaw.push(dataJSON.steeringYaw);
+            currentState.boringRPM.push(dataJSON.boringRPM);
+            currentState.frontPSI.push(dataJSON.frontPSI);
+            currentState.backPSI.push(dataJSON.backPSI);
+
+            db.set('controlsStatusResponses', currentState);
+
+            updateDbTime();
+            break;
+
+        //Received Localization Data
+        case 'pathStatus':
+
+            let currentDriftState = db.get('pathStatusResponses');
+
+            currentDriftState.driftX.push(dataJSON.driftX);
+            currentDriftState.driftY.push(dataJSON.driftY);
+            currentDriftState.driftZ.push(dataJSON.driftZ);
+
+            db.set('pathStatusResponses', currentDriftState);
+
+            updateDbTime();
+            break;
+
+        //The initial full path generation
+        case 'pathInitialize':
+
+            let points = dataJSON.points;
+            let obstacles = dataJSON.obstacles;
+
+            db.set('idealPathPoints', points);
+            db.set('obstacles', obstacles);
+
+            updateDbTime();
+            break;
+
+        //We don't call this, but this is for when the robot
+        //detects a new obstacle
+        case 'addObstacle':
+
+            db.get('obstacles')
+              .push(dataJSON.obstacle);
+
+            updateDbTime();
+            break;
+        
+        case 'correctPath':
+            //Will Only Send One Point at a Time
+            // [x,y,z,1]
+            db.get('correctedPathPoints')
+              .push(dataJSON.point)
+
+            updateDbTime();
+            break;
+
+            //No match for the db, write an error message
+        default:
+
+            db.get('errors')
+              .push('Failed to Match the JSON Object');
+
+            updateDbTime();
+    }
+}
+
+/**A small helper function to fill in the last update
+ * time for the database. It also functions as the write
+ * call. 
+ */
+function updateDbTime(){
+    db.set('updatedAt', Date.now()).write();
+}
 
 
-//File Export CSV thing
+
+//Server Listen
+pythonServer.listen(port); //7086
+httpServer.listen(process.env.PORT || frontPort); //3000
