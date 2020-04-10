@@ -4,6 +4,12 @@ const frontPort = 3000;
 const fs = require('fs');
 const mime = require('mime');
 const path = require('path');
+const low = require('lowdb');
+const FileSync = require('lowdb/adapters/FileSync');
+const { Parser } = require('json2csv');
+
+const adapter = new FileSync('db.json');
+const db = low(adapter);
 
 let pythonServer;
 let socket;
@@ -69,11 +75,45 @@ const httpServer = http.createServer(function(request, response){
     }
 })
 
+//Checking on initialization of HTTP Server
 if(httpServer){
     console.log('HTTP Server Started');
 }
 else{
     console.log('Failed to Initialize HTTP Server')
+}
+
+//Checking on Initialization of LowDB Database
+if(db){
+    initializeDb();
+    console.log('Database Initialized');
+}
+else{
+    console.log('Failed to Initialize Database');
+}
+
+/**Preloads the database with relevant fields, and
+ * sets the time fields to date.now
+ * @field sentControls,
+ * @field controlsStatusResponses
+ * @field idealPathPoints
+ * @field pathStatusResponses
+ * @field lastUpdated
+ * @field createdAt
+ */
+function initializeDb() {
+    db.defaults(
+        {
+            sentControls: [],
+            controlsStatusResponses: [],
+            idealPathPoints: [],
+            correctedPathPoints: [],
+            pathStatusResponses: [],
+            lastUpdated: Date.now(),
+            createdAt: Date.now()
+        }
+    )
+    .write(); 
 }
 
 /**Takes a GET request from a client, and then checks whether or not
@@ -102,6 +142,8 @@ function handleGet(request, response){
         case '/datavis':
             sendFile(response, '../front-end/datavis/datavis.html');
             break;
+        case '/compile':
+            sendFile(response, '../front-end/compile/compile.html');
         default:
             sendFile(response, filename);
             break;
@@ -196,8 +238,8 @@ function handleControls(data, response){
     }
 }
 
-/**Takes the control information from the client and applies processing on it.
- * Currently, this function does nothing.
+/**Takes the control information from the client and process it for some information.
+ * It adds it to the database as well.
  * @param {JSON} controls 
  */
 function processControls(controls){
