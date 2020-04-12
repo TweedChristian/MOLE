@@ -16,6 +16,9 @@ let socket;
 let port = 7086;
 let dir = '../front-end/';
 
+//If we wish to clear the db on start
+let dbClear = false;
+
 /**CONTROLS
  * type: 'controls'
  * boringSpeed
@@ -26,10 +29,10 @@ let dir = '../front-end/';
  * turningX
  */
 
- /**ERROR
-  * type: 'error'
-  * message (255 char limit)
-  */
+/**ERROR
+ * type: 'error'
+ * message (255 char limit)
+ */
 
 /**PATH
  * type: 'path',
@@ -39,24 +42,24 @@ let dir = '../front-end/';
  * distance
  */
 
- /**STATUS
-  * type: 'status',
-  * imuAccX,
-  * imuAccY,
-  * imuAccZ,
-  * imuYaw,
-  * imuPitch,
-  * imuRoll,
-  * boringRPM,
-  * extensionRate,
-  * drillTemp,
-  * steeringYaw,
-  * steeringPitch,
-  * frontPSI,
-  * backPSI
-  */
+/**STATUS
+ * type: 'status',
+ * imuAccX,
+ * imuAccY,
+ * imuAccZ,
+ * imuYaw,
+ * imuPitch,
+ * imuRoll,
+ * boringRPM,
+ * extensionRate,
+ * drillTemp,
+ * steeringYaw,
+ * steeringPitch,
+ * frontPSI,
+ * backPSI
+ */
 
-  //TODO: ADD OTHER COMMANDS FROM DB
+//TODO: ADD OTHER COMMANDS FROM DB
 
 /**
  * SERVER, DATABASE INITIALIZE FUNCTIONS
@@ -66,15 +69,15 @@ let dir = '../front-end/';
 startNetServer();
 
 //Initializing our http server
-const httpServer = http.createServer(function(request, response){
-   // console.log(request.method);
-    if(request.method === 'GET'){
+const httpServer = http.createServer(function (request, response) {
+    // console.log(request.method);
+    if (request.method === 'GET') {
         handleGet(request, response);
     }
-    else if(request.method === 'POST'){
+    else if (request.method === 'POST') {
         handlePost(request, response);
     }
-    else{
+    else {
         handleOtherRequest(response);
     }
 })
@@ -83,32 +86,32 @@ const httpServer = http.createServer(function(request, response){
 /**Initializes the connection to the python data layer
  * with a TCP socket connection
  */
-function startNetServer(){
-    pythonServer = net.createServer(function(soc) {
+function startNetServer() {
+    pythonServer = net.createServer(function (soc) {
         socket = soc;
     });
-    if(pythonServer){
+    if (pythonServer) {
         console.log('Net Server Started');
     }
-    else{
+    else {
         console.log('Net Server Failed to Start');
     }
 }
 
 //Checking on initialization of HTTP Server
-if(httpServer){
+if (httpServer) {
     console.log('HTTP Server Started');
 }
-else{
+else {
     console.log('Failed to Initialize HTTP Server')
 }
 
 //Checking on Initialization of LowDB Database
-if(db){
+if (db) {
     initializeDb();
     console.log('Database Initialized');
 }
-else{
+else {
     console.log('Failed to Initialize Database');
 }
 
@@ -126,40 +129,44 @@ else{
  * @field createdAt
  */
 function initializeDb() {
-    db.defaults(
-        {
-            sentControls: [],
-            controlsStatusResponses: {
-                driftX: [],
-                driftY: [],
-                driftZ: []
-            },
+    let startState = {
+        sentControls: [],
+        controlsStatusResponses: {
+            driftX: [],
+            driftY: [],
+            driftZ: []
+        },
+        idealPathPoints: [],
+        sentPaths: [],
+        obstacles: [],
+        correctedPathPoints: [],
+        pathStatusResponses: {
+            imuAccX: [],
+            imuAccY: [],
+            imuAccZ: [],
+            imuYaw: [],
+            imuPitch: [],
+            imuRoll: [],
+            boringRPM: [],
+            extensionRate: [],
+            drillTemp: [],
+            steeringYaw: [],
+            steeringPitch: [],
+            frontPSI: [],
+            backPSI: []
+        },
+        errors: [],
+        lastUpdated: Date.now(),
+        createdAt: Date.now()
+    };
 
-            idealPathPoints: [],
-            sentPaths: [],
-            obstacles: [],
-            correctedPathPoints: [],
-            pathStatusResponses: {
-                imuAccX: [],
-                imuAccY: [],
-                imuAccZ: [],
-                imuYaw: [],
-                imuPitch: [],
-                imuRoll: [],
-                boringRPM: [],
-                extensionRate: [],
-                drillTemp: [],
-                steeringYaw: [],
-                steeringPitch: [],
-                frontPSI: [],
-                backPSI: []
-            },
-            errors: [],
-            lastUpdated: Date.now(),
-            createdAt: Date.now()
-        }
-    )
-    .write(); 
+    db.defaults(startState)
+        .write();
+
+    //Clears the DB of entries on start
+    if (dbClear) {
+        db.setState(startState).write();
+    }
 }
 
 
@@ -173,32 +180,53 @@ function initializeDb() {
  * @param request is the http request
  * @param response is the http response we will send out, possibly containing the file
  */
-function handleGet(request, response){
+function handleGet(request, response) {
     const filename = dir + request.url.slice(1);
-    console.log("get",filename);
+    console.log("get", filename);
 
-    switch(request.url){
-        case '/':
-            sendFile(response, '../front-end/index/index.html');
-            break;
-        case '/controls':
-            sendFile(response, '../front-end/controls/controls.html');
-            break;
-        case '/about':
-            sendFile(response, '../front-end/about/about.html');
-            break;
-        case '/pathing':
-            sendFile(response, '../front-end/pathing/pathing.html');
-            break;
-        case '/datavis':
-            sendFile(response, '../front-end/datavis/datavis.html');
-            break;
-        case '/compile':
-            sendFile(response, '../front-end/compile/compile.html');
-        default:
-            sendFile(response, filename);
-            break;
+    //Reading from the db
+    if (request.url.includes('/db')) {
+        let dbItem = request.url.slice(4);
+        let branches = dbItem.split('/');
+        if(branches[1]){
+            readDb(branches[1], response);
+        }
+        else{   
+            noDbItem(response);
+        }
     }
+
+    //Downloading summary
+    else if(request.url === '/downloadSummary'){
+        handleCompile(response);
+    }
+
+    //File Requests
+    else {
+        switch (request.url) {
+            case '/':
+                sendFile(response, '../front-end/index/index.html');
+                break;
+            case '/controls':
+                sendFile(response, '../front-end/controls/controls.html');
+                break;
+            case '/about':
+                sendFile(response, '../front-end/about/about.html');
+                break;
+            case '/pathing':
+                sendFile(response, '../front-end/pathing/pathing.html');
+                break;
+            case '/datavis':
+                sendFile(response, '../front-end/datavis/datavis.html');
+                break;
+            case '/compile':
+                sendFile(response, '../front-end/compile/compile.html');
+            default:
+                sendFile(response, filename);
+                break;
+        }
+    }
+
 }
 
 /**Takes a given file name, and attempts to locate the file within
@@ -206,18 +234,16 @@ function handleGet(request, response){
  * @param response is the http response we will send
  * @param filename is the name of the file from the http request
  */
-const sendFile = function(response, filename){
+const sendFile = function (response, filename) {
     const type = mime.getType(filename);
-   // console.log(filename);
-  //  console.log(type);
     let filePath = path.resolve(__dirname, filename)
-    fs.readFile(filePath, function(err, content){
-        if(err === null){
+    fs.readFile(filePath, function (err, content) {
+        if (err === null) {
             //no error, file found
-            response.writeHead(200, {'Content-Type': type});
+            response.writeHead(200, { 'Content-Type': type });
             response.end(content);
         }
-        else{
+        else {
             //file not found
             response.writeHead(404);
             response.end('404 Error: File Not Found');
@@ -231,18 +257,18 @@ const sendFile = function(response, filename){
  * @param {*} request is the http request we received
  * @param {*} response is the http response we will send
  */
-function handlePost(request, response){
+function handlePost(request, response) {
 
     let dataString = '';
 
-    request.on('data', function(data){
+    request.on('data', function (data) {
         dataString += data;
     });
 
-    request.on('end', function(){
+    request.on('end', function () {
         let dataJSON = JSON.parse(dataString);
-        if(dataJSON){
-            switch(dataJSON.type){
+        if (dataJSON) {
+            switch (dataJSON.type) {
                 case 'controls':
                     handleControls(dataJSON, response);
                     break;
@@ -261,28 +287,45 @@ function handlePost(request, response){
                 case 'correctPath':
                     handleCorrectPath(dataJSON, response);
                     break;
-                case 'addObstacle': 
+                case 'addObstacle':
                     handleAddObstacle(dataJSON, response);
                     break;
-                    //TODO: Talk with tom about whether or not to send the whole db
-                case 'dataVisRequest':
-                    handleDataVisRequest(dataJSON, response);
-                    break;
                 default:
-                    response.writeHead(400, 'Incorrect Command', {'Content-Type': 'text/plain'});
+                    response.writeHead(400, 'Incorrect Command', { 'Content-Type': 'text/plain' });
                     response.end('Your POST request did not follow the typing conventions');
             }
         }
         else {
-            response.writeHead(400, 'No Command', {'Content-Type': 'text/plain'});
+            response.writeHead(400, 'No Command', { 'Content-Type': 'text/plain' });
             response.end('Your POST request did not contain any command information.');
         }
     });
 }
 
 
-function handleCompile(dataJSON, response) {
+function handleCompile(response) {
+    fields = Object.keys(db.value());
+    const opts = { fields };
+    try {
+        const parser = new Parser(opts);
+        const csv = parser.parse(db.value());
+        fs.appendFileSync('summaryData.csv', csv);
+    }
+    catch(err){
+        console.error(err);
+    }
+    let size = fs.statSync('summaryData.csv').size;
+    console.log(size)
+    response.writeHead(200, {
+        // 'Content-Type': 'text/csv',
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': size,
+        'Content-Disposition': 'attachement; filename=summaryData.csv'
+    });
 
+    let readStream = fs.createReadStream('summaryData.csv');
+
+    readStream.pipe(response);
     //this will just send a csv
     // response.end(JSON.stringify(status), 'utf-8');
 }
@@ -299,25 +342,27 @@ function handleAddObstacle(dataJSON, response) {
 
 }
 
-function handleDataVisRequest(dataJSON, response) {
-
-}
 
 /**Handles the controls message, along with the status of
  * the python request
  * @param {JSON} data is the JSON object containing the controls information
  * @param response is the HTTP response we will send
  */
-function handleControls(data, response){
-    processControls(data);
-    let result = sendToDataLayer(data);
-    if(result){
-        response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+function handleControls(data, response) {
+    let result = processControls(data);
+    // let result = sendToDataLayer(data);
+    // result = null;
+    if (result) {
+        response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+        //Result will be a JSON string
         response.end(JSON.stringify(result), 'utf-8');
     }
     else {
-        response.writeHead(500, 'Issue with the data layer', {'Content-Type': 'text/plain'});
-        response.end();
+        response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify({
+            type: 'error',
+            message: 'Could Not Connect To The Data Layer'
+        }), 'utf-8');
     }
 }
 
@@ -325,8 +370,8 @@ function handleControls(data, response){
  * It adds it to the database as well.
  * @param {JSON} controls 
  */
-function processControls(controls){
-    writeToDb(data);
+function processControls(controls) {
+    writeToDb(controls);
     //TODO: get rid of dummy data for actual polling from the arduino
     let status = {
         type: 'status',
@@ -353,17 +398,20 @@ function processControls(controls){
  * @param data is the JSON containing the error message
  * @param response is the response we will send
  */
-function handleError(data, response){
+function handleError(data, response) {
     writeToDb(data);
     console.log(data.message);
     let result = sendToDataLayer(data);
-    if(result) {
-        response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+    if (result) {
+        response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
         response.end(JSON.stringify(result), 'utf-8');
     }
-    else{
-        response.writeHead(500, 'Issue with the Data Layer', {'Content-Type': 'text/plain'});
-        response.end();
+    else {
+        response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify({
+            type: 'error',
+            message: 'Could Not Connect To The Data Layer'
+        }), 'utf-8');
     }
 }
 
@@ -373,25 +421,28 @@ function handleError(data, response){
  * @param data is the JSON containing the pathing command
  * @param response is the HTTP response we will send
  */
-function handlePathing(data, response){
+function handlePathing(data, response) {
     writeToDb(data);
-    if(data){
+    if (data) {
         console.log(data);
         //processPathing(data);
         let result = sendToDataLayer(data);
-        if(result) {
+        if (result) {
             //TODO: Switch on the type of result
-            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(result), 'utf-8')
         }
         else {
-            response.writeHead(500, 'Issue with the Data Layer', {'Content-Type': 'text/plain'});
-            response.end();
+            response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+            response.end(JSON.stringify({
+                type: 'error',
+                message: 'Could Not Connect To The Data Layer'
+            }), 'utf-8');
         }
     }
-    else{
+    else {
         console.log('No data received');
-        response.writeHead(500, 'Could not Process Pathing Command', {'Content-Type': 'text/plain'});
+        response.writeHead(400, 'Could not Process Pathing Command', { 'Content-Type': 'text/plain' });
         response.end();
     }
 }
@@ -400,7 +451,7 @@ function handlePathing(data, response){
  * so we return 418, I'm a little teapot
  * @param response is the http response we will send
  */
-function handleOtherRequest(response){
+function handleOtherRequest(response) {
     response.writeHeader(418);
     response.end();
 }
@@ -417,21 +468,37 @@ function handleOtherRequest(response){
  * @param {JSON} json is the object we will be passing to the data layer
  * @returns the response from the python server, or null if we fail the request
  */
-function sendToDataLayer(json){
-    console.log('Message Testing');
-    try{
-        socket.write(JSON.stringify(json));
-        socket.on('data', function(data){
-            // console.log(data.toString());
+function sendToDataLayer(json) {
+    try {
+        let status = {
+            type: 'status',
+            imuAccX: 1.0,
+            imuAccY: 0.0,
+            imuAccZ: 1.2,
+            imuYaw: 1.0,
+            imuPitch: 1.0,
+            imuRoll: 0.0,
+            boringRPM: 1.1,
+            extensionRate: 1.0,
+            drillTemp: 100,
+            steeringYaw: 1.0,
+            steeringPitch: 10.0,
+            frontPSI: 90.0,
+            backPSI: 80.0
+        }
+        return JSON.stringify(status);
+        // socket.write(JSON.stringify(json));
+        // socket.on('data', function(data){
+        //     // console.log(data.toString());
 
-            //I'm not sure why we're closing the server
-            pythonServer.close();
+        //     //I'm not sure why we're closing the server
+        //     pythonServer.close();
 
-            //Data comes in as a buffer
-            return data.toString();
-        })
+        //     //Data comes in as a buffer
+        //     return data.toString();
+        // })
     }
-    catch(error){
+    catch (error) {
         console.log("ERROR OCCURED");
         console.log(error);
         return null; //For error checking above
@@ -448,8 +515,10 @@ function sendToDataLayer(json){
  */
 function handleDataLayerResponse(json) {
     //TODO: BUILD THIS OUT
-}
+    if (json) {
 
+    }
+}
 
 
 process.on('SIGTERM', () => {
@@ -471,12 +540,12 @@ process.on('SIGTERM', () => {
  * @param {JSON} dataJSON 
  */
 function writeToDb(dataJSON) {
-    switch(dataJSON.type){
+    switch (dataJSON.type) {
 
         //A pathing command
         case 'path':
             db.get('sentPaths')
-              .push(dataJSON);
+                .push(dataJSON);
 
             updateDbTime();
             break;
@@ -485,16 +554,22 @@ function writeToDb(dataJSON) {
         case 'error':
 
             db.get('errors')
-            .push(dataJSON.message);
+                .push(dataJSON.message);
 
             updateDbTime();
             break;
 
         //Manual Controls 
         case 'controls':
-
+            console.log("CONTROLS DB TEST")
+            console.log(dataJSON)
             db.get('sentControls')
-              .push(dataJSON)
+                .push(dataJSON)
+                .write();
+
+            console.log(
+                db.get('sentControls').value()
+            )
 
             updateDbTime();
             break;
@@ -554,36 +629,76 @@ function writeToDb(dataJSON) {
         case 'addObstacle':
 
             db.get('obstacles')
-              .push(dataJSON.obstacle);
+                .push(dataJSON.obstacle);
 
             updateDbTime();
             break;
-        
+
         case 'correctPath':
             //Will Only Send One Point at a Time
             // [x,y,z,1]
             db.get('correctedPathPoints')
-              .push(dataJSON.point)
+                .push(dataJSON.point)
 
             updateDbTime();
             break;
 
-            //No match for the db, write an error message
+        //No match for the db, write an error message
         default:
 
             db.get('errors')
-              .push('Failed to Match the JSON Object');
+                .push('Failed to Match the JSON Object');
 
             updateDbTime();
     }
-}
+
+} 
 
 /**A small helper function to fill in the last update
  * time for the database. It also functions as the write
  * call. 
  */
-function updateDbTime(){
+function updateDbTime() {
     db.set('updatedAt', Date.now()).write();
+}
+
+//TODO: Read Database Functions
+
+
+
+function readDb(branch, response) {
+    let specificItem, root;
+    if(branch.includes('/')){
+        subStrings = branch.split('/');
+        root = subStrings[0];
+        specificItem = subStrings[1];
+    }
+    else{
+        root = branch;
+    }
+    switch (root) {
+        case 'all':
+            break;
+        case 'controls':
+            break;
+        case 'status':
+            break;
+        case 'idealPathPoints':
+            break;
+        case 'paths':
+            break;
+        case 'pathStatuses':
+            break;
+        case 'correctedPaths':
+            break;
+        case 'errors':
+            break;
+        case 'lastUpdated':
+            break;
+        default:
+            break;
+    }
+
 }
 
 
