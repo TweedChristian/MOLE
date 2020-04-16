@@ -87,8 +87,8 @@ def parseCommandMessage(message):
 def parseCommandMessageStr(message):
     # Sends the command message as a string instead of chars.
     # Get everything out of the message
-    boringSpeed = int(message['boringSpeed'])
-    extensionRate = int(message['extensionRate'])
+    boringSpeed = float(message['boringSpeed'])
+    extensionRate = float(message['extensionRate'])
     inflateFront = message['inflateFront']
     inflateBack = message['inflateBack']
     turningX = float(message['turningX'])
