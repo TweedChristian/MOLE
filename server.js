@@ -28,7 +28,6 @@ const server = http.createServer(function(request, response){
 })
 
 function handleGet(request, response){
-    console.log("DOES NOT PASS THE VIBE CHECK");
     const filename = dir + request.url.slice(1);
     console.log("get",filename);
 
