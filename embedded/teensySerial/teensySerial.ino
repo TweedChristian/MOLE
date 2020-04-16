@@ -26,24 +26,18 @@ void loop() {
     parseMessage();
     if(newData == true){
       newData = false;
-//      Serial.print("new data inserting into message at index ");
-//      Serial.print(index);
-//      Serial.print(" ");
-//      Serial.println(messageFrag);
       message[index] = messageFrag;
       index ++;
      messageFrag = "";
     }
   }
-  Serial.print("read whole message\n");
   messageEnd = false;
-//  for(int i = 0; i < index; i++){
-//    Serial.print("message fragment: ");
-//    Serial.println(message[i]);    
-//  }
   index = 0;
-  if(message[0] = "0"){
+  if(message[0] == "0"){
     parseCommandMessage();
+  }
+  else if(message[0] == "3"){
+    parseErrorMessage();
   }
 
 }
@@ -65,7 +59,7 @@ void parseMessage(){
 }
 
 void parseCommandMessage(){
-  setBoringSpeed(atoi(message[1].c_str()));
+  /*setBoringSpeed(atoi(message[1].c_str()));
   setExtensionRate(atoi(message[2].c_str()));
   if(message[3] == "true"){
     inflate('f');
@@ -75,6 +69,15 @@ void parseCommandMessage(){
   }
   setTurningX(atof(message[5].c_str()));
   setTurningZ(atof(message[6].c_str()));
+  Serial.write("~");*/
+  blink(atoi(message[1].c_str()));
+  sendStatus();
+}
+
+void parseErrorMessage(){
+  setBoringSpeed(0);
+  setExtensionRate(0);
+  Serial.write("Shutting Down");
   Serial.write("~");
 }
 
@@ -123,5 +126,27 @@ void blink(int count){
     delay(250);
     digitalWrite(13, LOW);
     delay(250);
+  }
+}
+
+void sendStatus(){
+  String statusMessage = "status,";
+  statusMessage += String(readImu('x'))+ ',';
+  statusMessage += String(readImu('y')) + ',';
+  statusMessage += String(readImu('z'));
+  Serial.println(statusMessage);
+  Serial.println('~');
+}
+
+float readImu(char axis){
+  switch (axis){
+    case 'x':
+      return 1.11;
+    case 'y':
+      return 2.22;
+    case 'z':
+      return 3.33;
+    default:
+      return 6.66;
   }
 }
