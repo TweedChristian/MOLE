@@ -150,6 +150,29 @@ def sendUpstream(message, socket):
         return 1
     except:
         return 0
+'''
+* Parses the comma-separated string from the arduino into a JSON object to send to the node server
+* @param replyString {str} the comma separated string from arduino
+* Stub for now with dummy data, sue me
+'''
+def parseReply(replyString):
+    replyJSON = {
+        'type': 'status',
+        'imuAccX': 1.1,
+        'imuAccY': 2.2,
+        'imuAccZ': 3.3,
+        'imuYaw': 1.0,
+        'imuPitch': 1.0,
+        'imuRoll': 1.0, #we are not controlling roll, maybe dont need
+        'boringRPM': 1.0,
+        'extensionRPM': 1.0,
+        'drillTemp': 1.0,
+        'steeringYaw': 1.0,
+        'steeringPitch': 1.0,
+        'frontPSI': 1.0,
+        'backPSI': 1.0
+    }
+    return replyJSON
 
 if __name__ == "__main__":
 
@@ -211,13 +234,9 @@ if __name__ == "__main__":
                     print("Parsed Arduino reply")
                     break
                 print("Arduino says: " + reply)
-        okMessage = {
-            'type': 'ok'
-        }
-        okJSON = json.dumps(okMessage)
-        print(okJSON)
-        if(sendUpstream(okJSON,s)):
-            print("sent ok message")
+        replyJSON = parseReply(reply)
+        print(json.dumps(replyJSON))
+        if(sendUpstream(json.dumps(replyJSON),s)):
+            print("sent status")
         else:
-            print("error sending ok message")
-    s.close()
+            print("error sending message")

@@ -12,6 +12,9 @@ let colorSelection;
 let segDist = 4;
 //let segDist = 0.51825575467;
 
+//If we want to log all operations
+let testMode = true;
+
 function main() {
     let canvas = document.getElementById("Canvas");
     gl = WebGLUtils.setupWebGL(canvas, undefined);
@@ -51,15 +54,141 @@ function main() {
         vec4(0.439, 0.502, 0.565, 1.0), //slate
         vec4(0.78, 0.082, 0.522, 1.0)//viored
     ];
-    //   cube();
-    //parabola(5, 20);
-    //  angleSubdivisionGeneration(idealRadius(6,4));
+    // cube();
+    // parabola(5, 20);
+    // angleSubdivisionGeneration(idealRadius(6, 4));
     // outsideAngleGeneration();
     // render();
     // draw();
     // animate();
 
-    lineRotation(1, 1, 2, 3, 4);
+   // findNextPointOnCurve(3.5, 4, 0.0, 0.0, 0.0, 4.0);
+   addAxis();
+//    findNextPointOnCurve(20,4,0.0,0.0,0.0,4.0);
+//    console.log(`${x} and ${y}`);
+//    angleBetweenTwoPoints(0.0, 4.0, 4.0, 0.0);
+//    angleBetweenTwoPoints(4.0, 8.0, 8.0, 4.0);
+   constructCurve(20, 4, 9, -12.0, -8.0);
+   render();
+   draw();
+}
+
+
+function addAxis(){
+    points.push(vec4(-200.0, 0.0, 0.0, 1.0));
+    points.push(vec4(200.0, 0.0, 0.0, 1.0));
+    colors.push(colorSelection[12]);
+    colors.push(colorSelection[12]);
+    points.push(vec4(0.0,-200.0,0.0,1.0));
+    points.push(vec4(0.0,200.0,0.0,1.0));
+    colors.push(colorSelection[12]);
+    colors.push(colorSelection[12]);
+}
+function constructCurve(theta, distance, iterations, xstart, ystart) {
+   // MAYBE USE LAW OF SINES TO FIND ANGLE BETWEEN POINTS
+    // let x1, y1, x2, y2;
+    // [x2, y2] = findNextPointOnCurve(theta, distance, xstart, ystart, xstart, ystart + distance);
+    // x1 = xstart;
+    // y1 = ystart + distance;
+    // findNextPointOnCurve(theta, distance, x1, y1, x2, y2);
+    let x1, y1;
+    let x2, y2;
+    x1 = xstart;
+    y1 = ystart;
+    x2 = xstart;
+    y2 = ystart + distance;
+    points.push(vec4(x1, y1, 0.0, 1.0));
+    points.push(vec4(x2, y2, 0.0, 1.0));
+    colors.push(colorSelection[9]);
+    colors.push(colorSelection[10]);
+    let tempX, tempY;
+    for(let i=0; i<iterations;i++){
+       [tempX,tempY] = findNextPointOnCurve(theta, distance, x1, y1, x2, y2);
+       x1 = x2;
+       y1 = y2;
+       x2 = tempX;
+       y2 = tempY;
+       points.push(vec4(x1, y1, 0.0, 1.0));
+       points.push(vec4(x2, y2, 0.0, 1.0));
+       colors.push(colorSelection[9]);
+       colors.push(colorSelection[10]);
+    }
+    console.log(points);
+}
+
+function findNextPointOnCurve(theta, distance, x0, y0, x1, y1){
+    if(x0 !== x1 || y0 !== y1){
+        //First find the next point on the line defined by P0 and P1
+        let [x2,y2] = extendLine(x0,y0,x1,y1,distance);
+
+        console.log("Next point on line");
+        console.log(`${x2} and ${y2}`);
+
+        //Apply a rotation to P3 based on theta
+        let thetaRads = degToRad(theta);
+        //Need to rotate about P1
+        let x2P = x2 - x1;
+        let y2P = y2 - y1;
+        console.log("Translated");
+        console.log(`${x2P} and ${y2P}`);
+        let [x2r, y2r] = apply2dRotation(x2P, y2P, -thetaRads);
+        console.log('Rotated');
+        console.log(`${x2r} and ${y2r}`);
+        let x2RT = x2r + x1;
+        let y2RT = y2r + y1;
+        console.log("Translated Back");
+        console.log(`${x2RT} and ${y2RT}`);
+        angleBetweenTwoPoints(x2P, y2P, x2r, y2r);
+        return [x2RT, y2RT];
+    }
+   else{
+       throw console.error("Cannot make a line segment from those points, they are the same.");
+   } 
+
+}
+
+/**Not using traditional unit tests, but we call this function to do some general tests
+ * 
+ */
+function testAngleBetweenTwoPoints() {
+    console.log("===TESTING===");
+
+    //90 degree rotation
+    let test1 = 90;
+    if (angleBetweenTwoPoints(1, 1, -1, 1, true) === test1) {
+        console.log('PASSED');
+    }
+    else {
+        console.log('FAILED');
+    }
+
+    //270 degree rotation
+    let test2 = -90;
+    if (angleBetweenTwoPoints(1, 1, 1, -1, true) === test2) {
+        console.log('PASSED');
+    }
+    else {
+        console.log('FAILED');
+    }
+
+    //45 degree rotation
+    let test3 = 45;
+    console.log("Test 3");
+    if (angleBetweenTwoPoints(1, 1, 0, Math.sqrt(2), true) === test3) {
+        console.log('PASSED');
+    }
+    else {
+        console.log('FAILED');
+    }
+
+    let test4 = 100;
+    console.log('Test 4');
+    if(angleBetweenTwoPoints(1,1,0.5,1,true) !== test4){
+        console.log('PASSED');
+    }
+    else{
+        console.log('FAILED');
+    }
 }
 
 /**Curves can be generated with 12 cases. This stores a curve's important information
@@ -99,10 +228,35 @@ function lineRotation(x0, y0, x1, y1, d) {
  * @param {float} x1 
  * @param {float} y1 
  * @param {float} d 
- * @param {bool} log
  * @returns [x2,y2]
  */
-function extendLine(x0, y0, x1, y1, d, log) {
+function extendLine(x0, y0, x1, y1, d) {
+
+    //These shortcut operations in case the slope is 0 or undefined
+    //Vertical line, slope is infinity
+    if(x1.toFixed(3) === x0.toFixed(3)){
+
+        if(y1 > y0){
+            //Moving +y
+            return [x1, y1 + d];
+        }
+        else{
+            //Moving -y
+            return [x1, y1 - d];
+        }
+    }
+
+    //No slope
+    if(y1.toFixed(3) === y0.toFixed(3)){
+        if(x1 > x0){
+            //Moving +x
+            return [x1 + d, y1];
+        }
+        else{
+            //Moving -x
+            return [x1 - d, y1];
+        }
+    }
 
     let x2, y2, m;
 
@@ -117,9 +271,9 @@ function extendLine(x0, y0, x1, y1, d, log) {
         x2 = (x1 + (Math.pow(m, 2) * x1) + (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2));
         y2 = (m * (x2 - x1) + y1);
 
-        if (log) {
+        if (testMode) {
             console.log(
-            `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
+                `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
             The previous points are x0: ${x0}, y0: ${y0}, x1: ${x1}, y1: ${y1}, and the distance is ${d}.`
             );
         }
@@ -130,13 +284,12 @@ function extendLine(x0, y0, x1, y1, d, log) {
     x2 = (x1 + (Math.pow(m, 2) * x1) - (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2))
     y2 = (m * (x2 - x1) + y1);
 
-    if (log) {
+    if (testMode) {
         console.log(
-        `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
+            `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
         The previous points are x0: ${x0}, y0: ${y0}, x1: ${x1}, y1: ${y1}, and the distance is ${d}.`
         );
     }
-
     return [x2, y2];
 }
 
@@ -144,6 +297,7 @@ function extendLine(x0, y0, x1, y1, d, log) {
  * 
  * @param {int} count The amount of times to divide the semicircle by
  * @param {int} segDist The distance of the extension
+ * @returns the expected radius
  */
 function idealRadius(count, segDist) {
     let ang = 180 / count;
@@ -322,80 +476,75 @@ function angleSubdivisionGeneration(radius) {
  * @param {*} yi 
  * @param {*} xf 
  * @param {*} yf
- * @param {boolean} log is whether or not the user wants to log the result
  * @returns distance
  */
-function distance(xi, yi, xf, yf, log) {
+function distance(xi, yi, xf, yf) {
     xfDeep = JSON.parse(JSON.stringify({ val: xf })).val;
     yfDeep = JSON.parse(JSON.stringify({ val: yf })).val;
     xiDeep = JSON.parse(JSON.stringify({ val: xi })).val;
     yiDeep = JSON.parse(JSON.stringify({ val: yi })).val;
     let distance = Math.sqrt(Math.pow(xfDeep - xiDeep, 2) + Math.pow(yfDeep - yiDeep, 2));
-    if (log) {
+    if (testMode) {
         console.log(`Distance between point (${xf}, ${yf}) and ( ${xi}, ${yi}) is ${distance}`);
     }
     return distance;
 }
 
 /**Determines the angle between two points based on the 2d rotation matrix.
- * Note: If the denominator is 0, then we either have 90 or 270 degrees, 
- * but if the numerator is not +- 1, then we have a bug
+ * Note: If the denominator is 0, then we either have 90 or 270 degrees, 90 degrees if the numerator 
+ * is positive
  * @param {*} x0 
  * @param {*} y0 
  * @param {*} x1 
  * @param {*} y1 
- * @param {*} log 
  * @returns Theta in degrees
  */
-function angleBetweenTwoPoints(x0,y0,x1,y1,log){
+function angleBetweenTwoPoints(x0, y0, x1, y1) {
     let numerator = (y1 * x0) - (x1 * y0);
     let denominator = (x0 * x1) + (y0 * y1);
     let result;
 
-    if(denominator === 0){
-
+    if (denominator === 0) {
+        console.log("In check");
         //Either 90, 270, or bug
-        if(numerator === 1){
-            result = 90;
+        if (numerator >= 0) {
+            result = Math.PI / 2;
         }
-
-        else if(numerator === -1){
-            result =  270;
-        }
-
-        else{
-            throw console.error('Undefined error, divided a number by 0 that was not +- 1');
+        else {
+            result = -Math.PI / 2;
         }
     }
-
-    else{
+    else {
         result = Math.atan(numerator / denominator);
     }
 
     //Testing to see if this was a valid rotation
-    let testPoints = apply2dRotation(x0,y0,result);
-    
-    if(x1 === testPoints[0] && y1 === testPoints[1]) {
-        throw console.error('This was a valid rotation');
+    let testPoints = apply2dRotation(x0, y0, result);
+
+    if (testMode) {
+        console.log(`Test points: (${testPoints[0]}, ${testPoints[1]}), received (${x1}, ${y1})`);
     }
 
-    if(log){
-        console.log(`Rotation between A: (${x0}, ${y0}) to B: (${x1}, ${y1}) is of ${result} degrees`);
+    // if (x1.toFixed(3) !== testPoints[0].toFixed(3) && y1.toFixed(3) !== testPoints[1].toFixed(3)) {
+    //     throw console.error(`This was not a valid rotation. Expected (${testPoints[0]}, ${testPoints[1]}), but received (${x1}, ${y1})`);
+    // }
+
+    if (testMode) {
+        console.log(`Rotation between A: (${x0}, ${y0}) to B: (${x1}, ${y1}) is of ${radToDeg(result)} degrees`);
     }
 
-    return result;
+    return radToDeg(result);
 }
 
 /**Takes a rotation matrix and multiplies a vector by it. This is for 2d rotations only.
  * @param {*} x 
  * @param {*} y 
- * @param {*} theta is in degrees
+ * @param {*} theta is in radians
  * @returns [x,y] as the new coordinates
  */
-function apply2dRotation(x,y, theta){
-    let rads = Math.PI * theta / 180;
-    let rotatedX = (x * Math.cos(rads)) - (y * Math.sin(rads));
-    let rotatedY = (x * Math.sin(rads)) + (y * Math.cos(rads));
+function apply2dRotation(x, y, theta) {
+    let rotatedX = (x * Math.cos(theta)) - (y * Math.sin(theta));
+    let rotatedY = (x * Math.sin(theta)) + (y * Math.cos(theta));
     return [rotatedX, rotatedY];
 }
 
@@ -448,6 +597,21 @@ function projectToXY(p, q, r) {
         [],
         []
     ];
+}
+
+/**Takes a degree and converts it to radians
+ * @param deg 
+ * @returns radians
+ */
+function degToRad(deg) {
+    return deg * Math.PI / 180;
+}
+
+/**Takes radians and turns it into degrees
+ * @param {*} rad 
+ */
+function radToDeg(rad) {
+    return rad * 180 / Math.PI;
 }
 
 function draw() {
