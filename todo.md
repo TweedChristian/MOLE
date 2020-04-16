@@ -2,9 +2,6 @@
 
 _Write (done) next to completed tasks_
 
-
-Make thing MODEL, VIEW, CONTROLLER
-
 ## Pathing: 
 1. Build new curve method using rotation matrix (done)
 2. Construct curve around object using final curve method
@@ -20,12 +17,13 @@ Make thing MODEL, VIEW, CONTROLLER
 
 ## Node: 
 1. Add in stubs 
-2. Seperate things into concrete functions
-3. Documentation
-4. Define API behavior functions (build what we can)
+2. Seperate things into concrete functions (done)
+3. Documentation (done)
+4. Define API behavior functions (done)
 
 ## Controls:
 1. Style (DONE)
+2. Move Labels
 
 ## Python: 
 1. Add in Bayes curve algorithm
@@ -39,4 +37,4 @@ Make thing MODEL, VIEW, CONTROLLER
 4. ??? (Tom add stuff in here)
 
 ## D3Vis
-1. ???
+1. Make calls to the server to load data 

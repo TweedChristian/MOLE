@@ -194,12 +194,12 @@ function handleGet(request, response) {
         }
         else {
             response.writeHead(400, 'Bad Request');
-            response.end(JSON.stringify(
-                {
-                    type: 'error',
-                    message: 'No Item Requsted From the Database'
-                }
-            ));
+            let err =  {
+                type: 'error',
+                message: 'No Item Requsted From the Database'
+            };
+            writeToDb(err);
+            response.end(JSON.stringify(err));
         }
     }
 
@@ -310,6 +310,7 @@ function handlePost(request, response) {
                 type = 'error',
                 error: 'Your POST request did not contain any command information'
             }
+            writeToDb(err);
             response.end(JSON.stringify(err));
         }
     });
@@ -332,6 +333,13 @@ function handleCompile(response) {
     }
     catch (err) {
         console.error(err);
+        let err = {
+            type: 'error',
+            message: err
+        };
+        writeToDb(err);
+        response.writeHead(500, 'Could Not Generate File', {'Content-Type': 'text/plain'});
+        response.end(JSON.stringify(err));
     }
     let size = fs.statSync('summaryData.csv').size;
     response.writeHead(200, {
@@ -1149,12 +1157,12 @@ function selectControlsStatus(specificItem, response) {
             break;
         default:
             response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(
-                {
-                    type: 'error',
-                    message: 'That field is not in the controls status'
-                }
-            ));
+            let err = {
+                type: 'error',
+                message: 'That field is not in the controls status'
+            };
+            writeToDb(err);
+            response.end(JSON.stringify(err));
             break;
     }
 }
@@ -1196,10 +1204,12 @@ function selectPathsStatus(specificItem, response) {
             break;
         default:
             response.writeHead(400, 'Bad Request');
-            response.end(JSON.stringify({
+            let err = {
                 type: 'error',
                 message: 'Db couldn\'t find that field in path status'
-            }));
+            };
+            writeToDb(err);
+            response.end(JSON.stringify(err));
     }
 }
 
