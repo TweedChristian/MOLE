@@ -132,15 +132,6 @@ function initializeDb() {
     let startState = {
         sentControls: [],
         controlsStatusResponses: {
-            driftX: [],
-            driftY: [],
-            driftZ: []
-        },
-        idealPathPoints: [],
-        sentPaths: [],
-        obstacles: [],
-        correctedPathPoints: [],
-        pathStatusResponses: {
             imuAccX: [],
             imuAccY: [],
             imuAccZ: [],
@@ -154,6 +145,16 @@ function initializeDb() {
             steeringPitch: [],
             frontPSI: [],
             backPSI: []
+           
+        },
+        idealPathPoints: [],
+        sentPaths: [],
+        obstacles: [],
+        correctedPathPoints: [],
+        pathStatusResponses: {
+            driftX: [],
+            driftY: [],
+            driftZ: []
         },
         errors: [],
         lastUpdated: Date.now(),
@@ -192,12 +193,18 @@ function handleGet(request, response) {
             readDb(branches[1], response);
         }
         else{   
-            noDbItem(response);
+            response.writeHead(400, 'Bad Request');
+            response.end(JSON.stringify(
+                {
+                    type: 'error',
+                    message: 'No Item Requsted From the Database'
+                }
+            ));
         }
     }
 
     //Downloading summary
-    else if(request.url === '/downloadSummary'){
+    else if(request.url === '/downloadSummary' || request.url === '/downloadSummary/'){
         handleCompile(response);
     }
 
@@ -278,9 +285,6 @@ function handlePost(request, response) {
                 case 'path':
                     handlePathing(dataJSON, response);
                     break;
-                case 'compile':
-                    handleCompile(dataJSON, response);
-                    break;
                 case 'pathInitialize':
                     handlePathInitialize(dataJSON, response);
                     break;
@@ -291,31 +295,45 @@ function handlePost(request, response) {
                     handleAddObstacle(dataJSON, response);
                     break;
                 default:
-                    response.writeHead(400, 'Incorrect Command', { 'Content-Type': 'text/plain' });
-                    response.end('Your POST request did not follow the typing conventions');
+                    let err = {   
+                        type: 'error',
+                        error: 'Your POST request did not follow the typing conventions'
+                    };
+                    writeToDb(err);
+                    response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+                    response.end(JSON.stringify(err));
             }
         }
         else {
             response.writeHead(400, 'No Command', { 'Content-Type': 'text/plain' });
-            response.end('Your POST request did not contain any command information.');
+            let err = {
+                type = 'error',
+                error: 'Your POST request did not contain any command information'
+            }
+            response.end(JSON.stringify(err));
         }
     });
 }
 
 
+/**Opens a csv file, clears it if it exists, and adds all the database values to 
+ * it with the fields of the database as the headers
+ * @param response is the HTTP response containing the file
+ */
 function handleCompile(response) {
     fields = Object.keys(db.value());
     const opts = { fields };
     try {
         const parser = new Parser(opts);
         const csv = parser.parse(db.value());
-        fs.appendFileSync('summaryData.csv', csv);
+        let file = fs.openSync('summaryData.csv', 'a');
+        fs.truncateSync(file); //Empties the file
+        fs.appendFileSync(file, csv);
     }
     catch(err){
         console.error(err);
     }
     let size = fs.statSync('summaryData.csv').size;
-    console.log(size)
     response.writeHead(200, {
         // 'Content-Type': 'text/csv',
         'Content-Type': 'application/octet-stream',
@@ -326,20 +344,113 @@ function handleCompile(response) {
     let readStream = fs.createReadStream('summaryData.csv');
 
     readStream.pipe(response);
-    //this will just send a csv
-    // response.end(JSON.stringify(status), 'utf-8');
 }
 
+
+/**
+ * 
+ * @param dataJSON 
+ * @param response 
+ */
 function handlePathInitialize(dataJSON, response) {
-
+    //Doesn't Get Sent to the Data Layer
+    if(dataJSON){
+        let result = processPathInit(dataJSON);
+        if(result){
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(result));
+        }
+        else{
+            let err = {
+                type: 'error',
+                message: 'Could Not Connect to the Data Layer'
+            };
+            writeToDb(err);
+            response.writeHead(500, 'Issue With the Data Layer', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(err));
+        }
+    }
+    else {
+        let res = {
+            type: 'error',
+            message: 'Could Not Read Path Init'
+        };
+        writeToDb(res)
+        console.log('No data received');
+        response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify(res));
+    }
 }
 
+/**Sends a corrected path (identical to the normal path) to the data layer
+ * We use this type to indicate we strayed from the path,
+ * the JSON should contain the index 
+ * @param dataJSON is the JSON containing the path information
+ * @param response 
+ */
 function handleCorrectPath(dataJSON, response) {
-
+    if(dataJSON){
+        //let result = sendToDataLayer(dataJSON)
+        let result = processCorrectedPath(dataJSON);
+        if(result){
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(result));
+        }
+        else{
+            let err = {
+                type: 'error',
+                message: 'Could Not Connect to the Data Layer'
+            };
+            writeToDb(err);
+            response.writeHead(500, 'Issue With the Data Layer', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(err));
+        }
+    }
+    else {
+        let res = {
+            type: 'error',
+            message: 'Could Not Read Corrected Path'
+        };
+        writeToDb(res)
+        console.log('No data received');
+        response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify(res));
+    }
 }
 
+/**Takes an Obstacle and adds it to the database. It does not get 
+ * sent to the data layer
+ * @param dataJSON is the JSON containing the obstacle
+ * @param response is the HTTP response to be sent
+ */
 function handleAddObstacle(dataJSON, response) {
-
+    //Doesn't Get Sent to the Data Layer
+    if(dataJSON){
+        let result = processAddObstacle(dataJSON);
+        if(result){
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(result));
+        }
+        else{
+            let err = {
+                type: 'error',
+                message: 'Could Not Connect to the Data Layer'
+            };
+            writeToDb(err);
+            response.writeHead(500, 'Issue With the Data Layer', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(err));
+        }
+    }
+    else {
+        let res = {
+            type: 'error',
+            message: 'No Obstacle Provided'
+        };
+        writeToDb(res)
+        console.log('No data received');
+        response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify(res));
+    }
 }
 
 
@@ -349,22 +460,126 @@ function handleAddObstacle(dataJSON, response) {
  * @param response is the HTTP response we will send
  */
 function handleControls(data, response) {
-    let result = processControls(data);
-    // let result = sendToDataLayer(data);
-    // result = null;
-    if (result) {
-        response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
-        //Result will be a JSON string
-        response.end(JSON.stringify(result), 'utf-8');
+    if(data){
+        let result = processControls(data);
+        // let result = sendToDataLayer(data);
+        // result = null;
+        if (result) {
+            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+            //Result will be a JSON string
+            response.end(JSON.stringify(result), 'utf-8');
+        }
+        else {
+            let err = {
+                type: 'error',
+                message: 'Could Not Connect To The Data Layer'
+            };
+            writeToDb(err);
+            response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+            response.end(JSON.stringify(err), 'utf-8');
+        }
     }
-    else {
-        response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
-        response.end(JSON.stringify({
+    else{
+        let res = {
             type: 'error',
-            message: 'Could Not Connect To The Data Layer'
-        }), 'utf-8');
+            message: 'Could Not Read Controls'
+        };
+        writeToDb(res)
+        console.log('No data received');
+        response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify(res));
     }
 }
+
+
+/**Takes an Error command, and decides on what to do with it,
+ * currently only prints the message to the console, in future iterations,
+ * we will have classified forms of errors, passes the error down
+ * @param data is the JSON containing the error message
+ * @param response is the response we will send
+ */
+function handleError(data, response) {
+    processError(data);
+    writeToDb(data);
+    console.log(data.message);
+    let result = sendToDataLayer(data);
+    if(data){
+        if (result) {
+            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+            response.end(JSON.stringify(result), 'utf-8');
+        }
+        else {
+            let err = {
+                type: 'error',
+                message: 'Could Not Connect To The Data Layer'
+            };
+            writeToDb(err);
+            response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+            response.end(JSON.stringify(err), 'utf-8');
+        }
+    }
+    else{
+        let res = {
+            type: 'error',
+            message: 'Could Not Read Error'
+        };
+        writeToDb(res)
+        console.log('No data received');
+        response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify(res));
+    }
+}
+
+/**Takes a path command from the client and applies processing to it,
+ * then preceeds to send it to the data layer and responds accordingly to the 
+ * data layer
+ * @param data is the JSON containing the pathing command
+ * @param response is the HTTP response we will send
+ */
+function handlePathing(data, response) {
+    writeToDb(data);
+    if (data) {
+        console.log(data);
+        processPathing(data);
+        let result = sendToDataLayer(data);
+        if (result) {
+            //TODO: Switch on the type of result
+            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+            response.end(JSON.stringify(result), 'utf-8')
+        }
+        else {
+            response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+            let err = {
+                type: 'error',
+                message: 'Could Not Connect To The Data Layer'
+            }
+            writeToDb(err);
+            response.end(JSON.stringify(err), 'utf-8');
+        }
+    }
+    else {
+        let res = {
+            type: 'error',
+            message: 'Could Not Process Pathing Command'
+        };
+        writeToDb(res)
+        console.log('No data received');
+        response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify(res));
+    }
+}
+
+
+
+/**We currently don't have a way to deal with requests that aren't gets or posts
+ * so we return 418, I'm a little teapot
+ * @param response is the http response we will send
+ */
+function handleOtherRequest(response) {
+    response.writeHeader(418);
+    response.end();
+}
+
 
 /**Takes the control information from the client and process it for some information.
  * It adds it to the database as well.
@@ -392,70 +607,15 @@ function processControls(controls) {
     return status;
 }
 
-/**Takes an Error command, and decides on what to do with it,
- * currently only prints the message to the console, in future iterations,
- * we will have classified forms of errors, passes the error down
- * @param data is the JSON containing the error message
- * @param response is the response we will send
- */
-function handleError(data, response) {
-    writeToDb(data);
-    console.log(data.message);
-    let result = sendToDataLayer(data);
-    if (result) {
-        response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
-        response.end(JSON.stringify(result), 'utf-8');
-    }
-    else {
-        response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
-        response.end(JSON.stringify({
-            type: 'error',
-            message: 'Could Not Connect To The Data Layer'
-        }), 'utf-8');
-    }
-}
+function processError(dataJSON, response){}
 
-/**Takes a path command from the client and applies processing to it,
- * then preceeds to send it to the data layer and responds accordingly to the 
- * data layer
- * @param data is the JSON containing the pathing command
- * @param response is the HTTP response we will send
- */
-function handlePathing(data, response) {
-    writeToDb(data);
-    if (data) {
-        console.log(data);
-        //processPathing(data);
-        let result = sendToDataLayer(data);
-        if (result) {
-            //TODO: Switch on the type of result
-            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(result), 'utf-8')
-        }
-        else {
-            response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify({
-                type: 'error',
-                message: 'Could Not Connect To The Data Layer'
-            }), 'utf-8');
-        }
-    }
-    else {
-        console.log('No data received');
-        response.writeHead(400, 'Could not Process Pathing Command', { 'Content-Type': 'text/plain' });
-        response.end();
-    }
-}
+function processPathing(dataJSON, response) {}
 
-/**We currently don't have a way to deal with requests that aren't gets or posts
- * so we return 418, I'm a little teapot
- * @param response is the http response we will send
- */
-function handleOtherRequest(response) {
-    response.writeHeader(418);
-    response.end();
-}
+function processAddObstacle(dataJSON, response) {}
 
+function processCorrectedPath(dataJSON, response) {}
+
+function processInitializedPath(dataJSON, response) {}
 
 /**
  * DATA LAYER FUNCTIONS
@@ -501,6 +661,10 @@ function sendToDataLayer(json) {
     catch (error) {
         console.log("ERROR OCCURED");
         console.log(error);
+        writeToDb({
+            type: 'error',
+            message: error
+        })
         return null; //For error checking above
     }
 }
@@ -662,12 +826,13 @@ function updateDbTime() {
     db.set('updatedAt', Date.now()).write();
 }
 
-//TODO: Read Database Functions
-
-
-
+/**Grabs requested data from the database
+ * @param {string} branch is the db field request
+ * @param {string} response will be sent to the client with the data
+ */
 function readDb(branch, response) {
     let specificItem, root;
+    let data;
     if(branch.includes('/')){
         subStrings = branch.split('/');
         root = subStrings[0];
@@ -678,30 +843,235 @@ function readDb(branch, response) {
     }
     switch (root) {
         case 'all':
+            data = db.value();
             break;
         case 'controls':
+            data = db.get('sentControls').value();
             break;
         case 'status':
+            if(specificItem){
+                data = selectControlsStatus(specificItem, response);
+            }
+            else {
+                data = db.get('controlsStatusResponses').value();
+            }
             break;
         case 'idealPathPoints':
+            data = db.get('idealPathPoints').value();
             break;
         case 'paths':
+            data = db.get('sentPaths').value();
             break;
-        case 'pathStatuses':
+        case 'pathStatus':
+            if(specificItem){
+                data = selectPathsStatus(specificItem, response);
+            }
+            else{
+                data = db.get('pathStatusResponses').value();
+            }
+            break;
+        case 'obstacles':
+            data = db.get('obstacles').value();
             break;
         case 'correctedPaths':
+            data = db.get('correctedPathPoints').value();
             break;
         case 'errors':
+            data = db.get('errors').value();
             break;
         case 'lastUpdated':
+            data = db.get('lastUpdated').value();
             break;
         default:
             break;
     }
-
+    response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+    response.end(JSON.stringify({
+        type: 'dbRequest',
+        data: data
+    }), 'utf-8');
 }
 
+/**A helper function to select specific fields within
+ * the controls status responses
+ * @param {*} specificItem is the specified field
+ * @param {*} response is the HTTP response
+ */
+function selectControlsStatus(specificItem, response){
+    let data = db.get('controlsStatusResponses');
+    switch(specificItem){
+        case 'imuAccX':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.imuAccX
+                }
+            ));
+            break;
+        case 'imuAccY':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.imuAccY
+                }
+            ));
+            break;
+        case 'imuAccZ':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.imuAccZ
+                }
+            ));
+            break;
+        case 'imuYaw':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.imuYaw
+                }
+            ));
+            break;
+        case 'imuPitch':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.imuPitch
+                }
+            ));
+            break;
+        case 'imuRoll':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.imuRoll
+                }
+            ));
+            break;
+        case 'boringRPM':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.boringRPM
+                }
+            ));
+            break;
+        case 'extensionRate':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.extensionRate
+                }
+            ));
+            break;
+        case 'drillTemp':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.drillTemp
+                }
+            ));
+            break;
+        case 'steeringYaw':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.steeringYaw
+                }
+            ));
+            break;
+        case 'steeringPitch':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.steeringPitch
+                }
+            ));
+            break;
+        case 'frontPSI':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.frontPSI
+                }
+            ));
+            break;
+        case 'backPSI':
+            response.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.backPSI
+                }
+            ));
+            break;
+        default:
+            response.writeHead(400, 'Bad Request', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(
+                {
+                    type: 'error',
+                    message: 'That field is not in the controls status'
+                }
+            ));
+            break;
+    }
+}
 
+/**Finds the proper item from the db under the path status root
+ * 
+ * @param {string} specificItem is one of the items from the path status
+ * @param {*} response is the http response
+ */
+function selectPathsStatus(specificItem, response) {
+    let data = db.get('pathStatusResponses').value();
+    switch(specificItem){
+        case 'driftX':
+            response.writeHead(200, 'OK');
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.driftX
+                }
+            ));
+            break;
+        case 'driftY':
+            response.writeHead(200, 'OK');
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.driftY
+                }
+            ));
+            break;
+        case 'driftZ':
+            response.writeHead(200, 'OK');
+            response.end(JSON.stringify(
+                {
+                    type: 'dbRequest',
+                    data: data.driftZ
+                }
+            ));
+            break;
+        default:
+            response.writeHead(400, 'Bad Request');
+            response.end(JSON.stringify({
+                type: 'error',
+                message: 'Db couldn\'t find that field in path status'
+            }));
+    }
+}
 
 //Server Listen
 pythonServer.listen(port); //7086
