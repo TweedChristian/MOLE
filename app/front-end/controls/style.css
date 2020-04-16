@@ -1,0 +1,227 @@
+/* Important Top Level Styling*/
+
+body {
+    margin: auto;
+    text-align: center;
+    background-color: #3e4c5e;
+}
+
+html {
+    font-family: 'Roboto Mono', sans-serif;
+}
+
+.c_pageContainer {
+    max-width: 1440px;
+    margin: auto;
+}
+
+/* e8c547  - YELLOW */
+/* ff1053 - important red*/
+/* 3e4c5e - outer space */
+/* 93c6d6 - dark sky blue */
+/* 36484e - charcoal */
+/* 668586 - steal teal */
+/* a7acd9 - wild blue yonder */
+/* 9e8fb2 - glossy grape (maybe header?) */
+/* f9b9f2 - electric lavender */
+/* e2efde - platinum */
+/* 9f9aa4 - manatee */
+
+
+/* Nav Bar */
+.navHeader {
+    height: 48px;
+    background-color: #93c6d6;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 150px auto auto;
+    justify-items: start;
+}
+
+.navHeader h1 {
+    margin: 0;
+    height: 48px;
+    color: rgba(0,0,0,0.75);
+}
+
+.navHeader__links {
+    display: grid;
+    justify-self: start;
+    width: 100%;
+    grid-template-rows: 1fr;
+    grid-template-columns: repeat(4, auto);
+    align-items: center;
+}
+
+.navHeader__link {
+    text-decoration: none;
+    height: 48px;
+    width: 100%;
+    display: inline-block;
+}
+
+.navHeader__link:hover{
+    background-color: #516c75;
+}
+
+.navHeader__link:active, .navHeader__link:focus {
+    outline: 0;
+    border: none;
+}
+
+.navHeader__link h2 {
+    margin: 0;
+    height: 48px;
+    margin-top: 0.25rem;
+    color: rgba(0,0,0,0.75);
+}
+
+/* Main Content */
+.c_controlsBlock__controlContainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-items: center;
+    align-items: center;
+    /* height: calc(100vh - 48px); */
+    padding: 32px;
+    box-sizing: border-box;
+    width: max-content;
+    gap: 32px;
+    background-color: #9e8fb2;
+    margin: auto;
+    margin-top: 2rem;
+    box-shadow: -6px 9px 7px 0px rgba(0,0,0,0.47);
+}
+
+.c_controlsBlock__title {
+    text-align: start;
+    color: white;
+    margin: 1rem;
+}
+
+/* Input Styling */
+.c_controlsBlock__button {
+    font-family: inherit;
+    background-color: #9f9aa4 ;
+    border-radius: 3px;
+    padding: 1rem;
+    margin: 1rem;
+}
+
+.c_controlsBlock__controls {
+    background-color: #668586;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    box-shadow: -3px 7px 15px 3px rgba(0,0,0,0.33);
+}
+
+/* Controls Button*/
+.c_controlsBlock__buttonsContainer {
+    display: grid;
+    grid-template-columns: 1fr;
+    height: 100%;
+    align-items: center;
+    grid-template-rows: auto auto auto;
+    gap: 1rem
+}
+
+.c_controlsBlock__buttonText {
+    color: white;
+    font-weight: bold;
+}
+
+.c_controlsBlock__stop {
+    width: 100%;
+    padding: 1rem 0rem;
+}
+
+.c_controlsBlock__stopButton {
+    padding: 1rem;
+    border-radius: 6px;
+    font-family: inherit;
+    background-color: #ff1053;
+}
+
+.c_controlsBlock__stopText {
+    font-size: 2rem;
+    color: white;
+    font-weight: bold;
+}
+
+/* Controls Sliders */
+
+.c_controlsBlock__label {
+    color: white;
+}
+
+.c_controlsBlock__sliderContainer {
+    width: 100%;
+}
+
+.c_controlsBlock__slider {
+    appearance: none;
+    width: 100%;
+    opacity: 0.7;
+    outline: none;
+    background-color: #36484e;
+    transition: opacity .2s;
+    height: 25px;
+    border-radius: 5px;
+}
+
+.c_controlsBlock__slider:hover {
+    opacity: 1;
+}
+
+.c_controlsBlock__slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 25px;
+    cursor: pointer;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #f9b9f2;
+}
+
+.c_controlsBlock__slider::-moz-range-thumb {
+    width: 25px;
+    cursor: pointer;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #f9b9f2;
+}
+
+/* Command Log Styling */
+
+#logBox {
+    padding: 16px;
+
+    box-sizing: border-box;
+}
+
+#commandLog {
+    width: 100%;
+}
+.c_controlsBlock__commandLog {
+    width: 100%;
+    align-self: start;
+}
+
+#logBox {
+    background-color: #a7acd9;
+    overflow: auto;
+    list-style: none;
+    box-shadow: -3px 7px 15px 3px rgba(0,0,0,0.33);
+    max-height: 380px;
+}
+
+.c_controlsBlock__command {
+    color: white;
+}
+
+.c_controlsBlock__emergencyMessage {
+    font-weight: bold;
+    color: #ff1053;
+}

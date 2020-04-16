@@ -1,67 +1,38 @@
-/**This file is what interacts with all other libraries and organizes
-them in a 'process' */
-
-//import path vis module
-//import data vis module
-//import pathing module
-//import server module
-
-let obstacles = [];
-let values = [];
-let controls = [];
-//[ x, y, z, radius ]
-
-function main() {
+function main(){
     populate();
     setupControls();
 }
 
-// function fetchData() {
-//     let distance = +document.getElementById('distance').value;
-//     let depth = +document.getElementById('depth').value;
-//     let arc = document.getElementById('arc').checked;
-//     //Emptying the array
-//     values.splice(0, values.length);
-//     values.push(distance, depth, arc);
-//     console.log(values);
-// }
-
-// function addObject() {
-//     let x = +document.getElementById('x').value;
-//     let y = +document.getElementById('y').value;
-//     let z = +document.getElementById('z').value;
-//     let radius = +document.getElementById('radius').value;
-//     obstacles.push([x, y, z, radius]);
-//     console.log(obstacles);
-// }
-
 
 function setupControls() {
-    //let mode = document.getElementById('mode').checked;
-    // if (mode == true) {
-    //     document.addEventListener('keydown', (event) => {
-    //         //Should probably filter key here    
-    //         //TODO: Add keyup listener for control things only
-
-    //         send(event.key);
-    //     });
-    // }
-    // else {
-    //     document.addEventListener('keyup', (event) => {
-    //         filterKey(event.key);
-    //     })
-    // }
     document.addEventListener('keyup', (event) => {
         filterKey(event.key);
     })
 }
 
-//TODO: Add red text for reject
-function addCommand(message) {
-    let ul = document.getElementById('logBox');
-    let li = document.createElement('li');
-    li.appendChild(document.createTextNode(message));
-    ul.appendChild(li);
+function addCommand(message, emergency) {
+    const start = document.getElementById('commandPlaceholder')
+    if(start){
+        start.remove();
+    }
+    if(emergency){
+        let ul = document.getElementById('logBox');
+        let li = document.createElement('li');
+        li.classList.add('c_controlsBlock__emergencyMessage');
+        li.appendChild(document.createTextNode(message));
+        ul.insertAdjacentElement('afterbegin', li);
+    }
+    else{
+        let ul = document.getElementById('logBox');
+        let li = document.createElement('li')
+        li.classList.add('c_controlsBlock__command');
+        li.appendChild(document.createTextNode(message))
+        ul.insertAdjacentElement('afterbegin', li);
+    }
+}
+
+function emergency(){
+    addCommand('EMERGENCY STOP', true);
 }
 
 
@@ -137,8 +108,6 @@ function populate() {
     controls = [bore, extension, turnx, turnz, false, false];
 }
 
-//Small bug here, if I click the button and then hit enter it clicks
-//the bug again
 function inflate(location) {
     if (location === 0) {
         if (controls[4] === false) {
@@ -176,8 +145,5 @@ function filterKey(key) {
     if (key == 'Enter') {
         // console.log(compare());
         send(compare())
-    }
-    else {
-        //send(key);
     }
 }

@@ -1,3 +1,7 @@
+let MV = document.createElement('script');
+MV.src = '../../lib/MV.js';
+document.head.appendChild(MV);
+
 function generateCurve(obstacle){
     
 }
@@ -49,3 +53,20 @@ function alterSideLength(sl){
  * Keep track of current angle turned
  * 
  */
+
+
+ //TODO: make a way to find the midpoint of a curve that only has 2 points
+
+ //obstacle is center and side length
+ //curve is start, and end
+
+function collisionDetection(start, end, obstacle){
+    let pd = {
+        x: end.x - start.x,
+        y: end.y - start.y,
+        z: end.z - start.z
+    }
+    let pm = {
+    }
+
+}
