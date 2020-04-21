@@ -32,8 +32,78 @@ loop: {
     3.) path 
 }
 
-
 spencer will handle values of yaw, pitch, roll, distance
 
 JSON Command
 type: 'done'
+
+ROUTES:
+
+
+
+==== GETS ====
+
+
+/downloadSummary
+
+--Requests the CSV file for download
+
+
+--These read the database {type: 'dbRequest', data: ___ }
+
+
+..../db/status/imuAccX
+
+/db/all
+
+/db/controls
+
+/db/status
+    /db/status/imuAccX
+    /db/status/imuAccY
+    /db/status/imuAccZ
+    /db/status/imuYaw
+    /db/status/imuPitch
+    /db/status/imuRoll
+    /db/status/boringRPM
+    /db/status/extensionRate
+    /db/status/drillTemp
+    /db/status/steeringPitch
+    /db/status/steeringYaw
+    /db/status/frontPSI
+    /db/status/backPSI
+
+/db/idealPathPoints
+
+/db/paths
+
+/db/pathStatus
+    /db/pathStatus/driftX
+    /db/pathStatus/driftY
+    /db/pathStatus/driftZ
+
+/db/obstacles
+
+/db/correctedPaths
+
+/db/errors
+
+/db/lastUpdated
+
+
+
+==== Posts ====
+
+::types::
+
+error
+
+controls
+
+path
+
+pathInitialize
+
+correctPath
+
+addObstacle

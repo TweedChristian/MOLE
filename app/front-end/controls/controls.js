@@ -37,8 +37,6 @@ function emergency(){
 
 
 function send(req) {
-    console.log("i give up")
-    //Send key to server
     console.log(req);
     fetch('/submit', {
         method: 'POST',
@@ -46,23 +44,60 @@ function send(req) {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
     })
-        .then(response => response.json())
-        .then(status => {
-            console.log(status);
-        })
+        .then(response => checkResponseStatus(response));
+}
+
+
+async function checkResponseStatus(response){
+    let body = await response.json();
+    // console.log(body);
+    // addCommand(`--${body.message}--`, true);
+    switch(response.status){
+        case 200:
+            console.log("OK!");
+            break;
+        case 400:
+            console.log("COMMAND ERROR");
+            addCommand(body.message, true);
+            break;
+        case 500:
+            addCommand(response.statusText, true);
+            console.log("SERVER ERROR");
+            break;
+        default:
+            console.log(response.status);
+            break;
+    }
 }
 
 function handleResponse(response) {
-    switch (response.types) {
+    console.log(response);
+    switch (response.type) {
         case 'status':
             handleStatus(response);
-        case 'desync':
-            handleDesync(response);
+            break;
         case 'error':
-            console.log(response.error);
-        case 'emergency':
-            handleEmergency();
+            handleError(response);
+            break;
+        default:
+            handleDefault(response);
+            break;
     }
+}
+
+function handleError(response){
+    addCommand(response.message, true);
+    addCommand("ERROR: ", true);
+}
+
+function handleStatus(response) {
+    console.log(response);
+
+}
+
+function handleDefault(response){
+    console.log(response);
+    console.log('shit')
 }
 
 function compare() {
@@ -130,7 +165,7 @@ function inflate(location) {
         }
     }
     let controlsJSON = {
-        type: 'controls',
+        type: 'compile',
         boringSpeed: controls[0],
         extensionRate: controls[1],
         turningX: controls[2],
@@ -143,7 +178,6 @@ function inflate(location) {
 
 function filterKey(key) {
     if (key == 'Enter') {
-        // console.log(compare());
         send(compare())
     }
 }
