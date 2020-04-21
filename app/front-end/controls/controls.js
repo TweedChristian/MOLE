@@ -58,6 +58,7 @@ async function checkResponseStatus(response){
             break;
         case 400:
             console.log("COMMAND ERROR");
+            addCommand(body.message, true);
             break;
         case 500:
             addCommand(response.statusText, true);

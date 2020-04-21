@@ -32,14 +32,10 @@ loop: {
     3.) path 
 }
 
-
 spencer will handle values of yaw, pitch, roll, distance
 
 JSON Command
 type: 'done'
-
-
-
 
 ROUTES:
 
@@ -49,10 +45,14 @@ ROUTES:
 
 
 /downloadSummary
+
 --Requests the CSV file for download
 
 
 --These read the database {type: 'dbRequest', data: ___ }
+
+
+..../db/status/imuAccX
 
 /db/all
 

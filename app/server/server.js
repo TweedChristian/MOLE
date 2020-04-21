@@ -59,8 +59,6 @@ let dbClear = false;
  * backPSI
  */
 
-//TODO: ADD OTHER COMMANDS FROM DB
-
 /**
  * SERVER, DATABASE INITIALIZE FUNCTIONS
  */
@@ -188,13 +186,14 @@ function handleGet(request, response) {
     //Reading from the db
     if (request.url.includes('/db')) {
         let dbItem = request.url.slice(4);
-        let branches = dbItem.split('/');
-        if (branches[1]) {
-            readDb(branches[1], response);
+        console.log(dbItem);
+        // let branches = dbItem.split('/');
+        if (dbItem) {
+            readDb(dbItem, response);
         }
         else {
             response.writeHead(400, 'Bad Request');
-            let err =  {
+            let err = {
                 type: 'error',
                 message: 'No Item Requsted From the Database'
             };
@@ -307,7 +306,7 @@ function handlePost(request, response) {
         else {
             response.writeHead(400, 'No Command', { 'Content-Type': 'text/plain' });
             let err = {
-                type = 'error',
+                type: 'error',
                 error: 'Your POST request did not contain any command information'
             }
             writeToDb(err);
@@ -333,13 +332,13 @@ function handleCompile(response) {
     }
     catch (err) {
         console.error(err);
-        let err = {
+        let errMsg = {
             type: 'error',
             message: err
         };
-        writeToDb(err);
-        response.writeHead(500, 'Could Not Generate File', {'Content-Type': 'text/plain'});
-        response.end(JSON.stringify(err));
+        writeToDb(errMsg);
+        response.writeHead(500, 'Could Not Generate File', { 'Content-Type': 'text/plain' });
+        response.end(JSON.stringify(errMsg));
     }
     let size = fs.statSync('summaryData.csv').size;
     response.writeHead(200, {
@@ -510,7 +509,7 @@ function handleError(data, response) {
     if (data) {
         processError(data);
         console.log(data.message);
-       // let result = sendToDataLayer(data);
+        // let result = sendToDataLayer(data);
         if (result) {
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(result), 'utf-8');
@@ -614,11 +613,11 @@ function processControls(controls) {
         return status;
     }
     catch (err) {
-        let err = {
+        let errMsg = {
             type: 'error',
             message: err
         }
-        return err;
+        return errMsg;
     }
 }
 
@@ -632,11 +631,11 @@ function processError(dataJSON) {
         return dataJSON;
     }
     catch (err) {
-        let err = {
+        let errMsg = {
             type: 'error',
             message: err
         }
-        writeToDb(err);
+        writeToDb(errMsg);
         return null;
     }
 }
@@ -657,11 +656,11 @@ function processPathing(dataJSON) {
         };
     }
     catch (err) {
-        let err = {
+        let errMsg = {
             type: 'error',
             message: err
         }
-        return err;
+        return errMsg;
     }
 }
 
@@ -674,11 +673,11 @@ function processAddObstacle(dataJSON) {
         return dataJSON;
     }
     catch (err) {
-        let err = {
+        let errMsg = {
             type: 'error',
             message: err
         }
-        return err;
+        return errMsg;
     }
 }
 
@@ -698,28 +697,28 @@ function processCorrectedPath(dataJSON) {
         };
     }
     catch (err) {
-        let err = {
+        let errMsg = {
             type: 'error',
             message: err
         }
-        return err;
+        return errMsg;
     }
- }
+}
 
- /**Currently a stub function
-  * @param dataJSON is the JSON containing the set of points
-  */
-function processInitializedPath(dataJSON) { 
+/**Currently a stub function
+ * @param dataJSON is the JSON containing the set of points
+ */
+function processInitializedPath(dataJSON) {
     try {
         writeToDb(dataJSON);
         return dataJSON;
     }
     catch (err) {
-        let err = {
+        let errMsg = {
             type: 'error',
             message: err
         }
-        return err;
+        return errMsg;
     }
 }
 
@@ -786,7 +785,7 @@ function sendToDataLayer(json) {
  */
 function handleDataLayerResponse(json) {
     if (json) {
-        switch(json.type){
+        switch (json.type) {
             case 'status':
                 writeToDb(json);
                 return json;
@@ -804,19 +803,15 @@ function handleDataLayerResponse(json) {
                     message: 'Command from datalayer did not match any types'
                 }
                 writeToDb(err);
-                //This might be a weird one, might cause an uncaught
-                sendToDataLayer(err);
                 return err;
         }
     }
-    else{
+    else {
         let err = {
             type: 'error',
             message: 'No information from data layer provided'
         }
         writeToDb(err);
-        //This might be a weird one, might cause an uncaught
-        sendToDataLayer(err);
         return err;
     }
 }
@@ -863,7 +858,6 @@ function writeToDb(dataJSON) {
 
         //Manual Controls 
         case 'controls':
-            console.log("CONTROLS DB TEST")
             console.log(dataJSON)
             db.get('sentControls')
                 .push(dataJSON)
@@ -971,6 +965,7 @@ function updateDbTime() {
 function readDb(branch, response) {
     let specificItem, root;
     let data;
+    let item;
     if (branch.includes('/')) {
         subStrings = branch.split('/');
         root = subStrings[0];
@@ -982,9 +977,11 @@ function readDb(branch, response) {
     switch (root) {
         case 'all':
             data = db.value();
+            item = 'all'
             break;
         case 'controls':
             data = db.get('sentControls').value();
+            item = 'controls';
             break;
         case 'status':
             if (specificItem) {
@@ -992,13 +989,16 @@ function readDb(branch, response) {
             }
             else {
                 data = db.get('controlsStatusResponses').value();
+                item = 'controlsStatus';
             }
             break;
         case 'idealPathPoints':
             data = db.get('idealPathPoints').value();
+            item = 'idealPathPoints';
             break;
         case 'paths':
             data = db.get('sentPaths').value();
+            item = 'paths';
             break;
         case 'pathStatus':
             if (specificItem) {
@@ -1006,27 +1006,38 @@ function readDb(branch, response) {
             }
             else {
                 data = db.get('pathStatusResponses').value();
+                item = 'pathStatus';
             }
             break;
         case 'obstacles':
             data = db.get('obstacles').value();
+            item = 'obstacles';
             break;
         case 'correctedPaths':
             data = db.get('correctedPathPoints').value();
+            item = 'correctedPaths';
             break;
         case 'errors':
             data = db.get('errors').value();
+            item = 'errors';
             break;
         case 'lastUpdated':
             data = db.get('lastUpdated').value();
+            item = 'lastUpdated';
             break;
         default:
+            response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+            response.end(JSON.stringify({
+                type: 'dbRequest',
+                data: 'Not a valid field'
+            }), 'utf-8');
             break;
     }
     response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
     response.end(JSON.stringify({
         type: 'dbRequest',
-        data: data
+        data: data,
+        item: item
     }), 'utf-8');
 }
 
@@ -1036,14 +1047,15 @@ function readDb(branch, response) {
  * @param {*} response is the HTTP response
  */
 function selectControlsStatus(specificItem, response) {
-    let data = db.get('controlsStatusResponses');
+    let data = db.get('controlsStatusResponses').value();
     switch (specificItem) {
         case 'imuAccX':
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.imuAccX
+                    data: data.imuAccX,
+                    item: 'controlsStatus/imuAccX'
                 }
             ));
             break;
@@ -1052,16 +1064,19 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.imuAccY
+                    data: data.imuAccY,
+                    item: 'controlsStatus/imuAccY'
                 }
             ));
+
             break;
         case 'imuAccZ':
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.imuAccZ
+                    data: data.imuAccZ,
+                    item: 'controlsStatus/imuAccZ'
                 }
             ));
             break;
@@ -1070,7 +1085,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.imuYaw
+                    data: data.imuYaw,
+                    item: 'controlsStatus/imuYaw'
                 }
             ));
             break;
@@ -1079,7 +1095,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.imuPitch
+                    data: data.imuPitch,
+                    item: 'controlsStatus/imuPitch'
                 }
             ));
             break;
@@ -1088,7 +1105,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.imuRoll
+                    data: data.imuRoll,
+                    item: 'controlsStatus/imuRoll'
                 }
             ));
             break;
@@ -1097,7 +1115,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.boringRPM
+                    data: data.boringRPM,
+                    item: 'controlsStatus/boringRPM'
                 }
             ));
             break;
@@ -1106,7 +1125,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.extensionRate
+                    data: data.extensionRate,
+                    item: 'controlsStatus/extensionRate'
                 }
             ));
             break;
@@ -1115,7 +1135,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.drillTemp
+                    data: data.drillTemp,
+                    item: 'controlsStatus/drillTemp'
                 }
             ));
             break;
@@ -1124,7 +1145,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.steeringYaw
+                    data: data.steeringYaw,
+                    item: 'controlsStatus/steeringYaw'
                 }
             ));
             break;
@@ -1133,7 +1155,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.steeringPitch
+                    data: data.steeringPitch,
+                    item: 'controlsStatus/steeringPitch'
                 }
             ));
             break;
@@ -1142,7 +1165,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.frontPSI
+                    data: data.frontPSI,
+                    item: 'controlsStatus/frontPSI'
                 }
             ));
             break;
@@ -1151,7 +1175,8 @@ function selectControlsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.backPSI
+                    data: data.backPSI,
+                    item: 'controlsStatus/backPSI'
                 }
             ));
             break;
@@ -1180,7 +1205,8 @@ function selectPathsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.driftX
+                    data: data.driftX,
+                    item: 'pathStatus/driftX'
                 }
             ));
             break;
@@ -1189,7 +1215,8 @@ function selectPathsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.driftY
+                    data: data.driftY,
+                    item: 'pathStatus/driftY'
                 }
             ));
             break;
@@ -1198,7 +1225,8 @@ function selectPathsStatus(specificItem, response) {
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.driftZ
+                    data: data.driftZ,
+                    item: 'pathStatus/driftZ'
                 }
             ));
             break;

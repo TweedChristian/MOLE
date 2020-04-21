@@ -8,6 +8,7 @@
     <link rel='stylesheet' type='text/css' href='compile/style.css'>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
         rel="stylesheet">
+    <script src="compile/compile.js"></script>
 </head>
 
 <body>
@@ -37,5 +38,101 @@
     <div class='c_pageContainer'>
         <h1 class='c_aboutUs__Header'>Compile Data</h1>
         <h3 class='c_aboutUs__Header'>Hahah robot go brrrrrrrrr</h3>
+
+        <div class="c_controlsBlock__buttonContainer">
+            <button onclick="testCall('/db/all')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/all</span>
+            </button>
+    
+            <!-- STATUS BUTTONS  -->
+            <button onclick="testCall('/db/status')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status</span>
+            </button>
+            <button onclick="testCall('/db/status/imuAccX')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/imuAccX</span>
+            </button>
+            <button onclick="testCall('/db/status/imuAccY')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/imuAccY</span>
+            </button>
+            <button onclick="testCall('/db/status/imuAccZ')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/imuAccZ</span>
+            </button>
+            <button onclick="testCall('/db/status/imuYaw')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/imuYaw</span>
+            </button>
+            <button onclick="testCall('/db/status/imuPitch')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/imuPitch</span>
+            </button>
+            <button onclick="testCall('/db/status/imuRoll')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/imuRoll</span>
+            </button>
+            <button onclick="testCall('/db/status/boringRPM')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/boringRPM</span>
+            </button>
+            <button onclick="testCall('/db/status/extensionRate')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/extensionRate</span>
+            </button>
+            <button onclick="testCall('/db/status/drillTemp')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/drillTemp</span>
+            </button>
+            <button onclick="testCall('/db/status/steeringPitch')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/steeringPitch</span>
+            </button>
+            <button onclick="testCall('/db/status/steeringYaw')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/steeringYaw</span>
+            </button>
+            <button onclick="testCall('/db/status/frontPSI')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/frontPSI</span>
+            </button>
+            <button onclick="testCall('/db/status/backPSI')" class="c_controlsBlock__statusButton">
+                <span class="c_controlsBlock__statusButtonText">/db/status/backPSI</span>
+            </button>
+
+            <button onclick="testCall('/db/idealPathPoints')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/idealPathPoints</span>
+            </button>
+            <button onclick="testCall('/db/paths')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/paths</span>
+            </button>
+
+            <button onclick="testCall('/db/pathStatus')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/pathStatus</span>
+            </button>
+            <button onclick="testCall('/db/pathStatus/driftX')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/pathStatus/driftX</span>
+            </button>
+            <button onclick="testCall('/db/pathStatus/driftY')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/pathStatus/driftY</span>
+            </button>
+            <button onclick="testCall('/db/pathStatus/driftZ')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/pathStatus/driftZ</span>
+            </button>
+            <button onclick="testCall('/db/obstacles')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/obstacles</span>
+            </button>
+            <button onclick="testCall('/db/correctedPaths')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/correctedPaths</span>
+            </button>
+            <button onclick="testCall('/db/errors')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/errors</span>
+            </button>
+            <button onclick="testCall('/db/lastUpdated')" class="c_controlsBlock__button">
+                <span class="c_controlsBlock__buttonText">/db/lastUpdated</span>
+            </button>
+        </div>
+       
+
+        <div class='c_controlsBlock__commandLog'>
+            <label class='c_controlsBlock__label'>
+                <b class='c_controlsBlock__label__text'>Command Log</b>
+            </label>
+            <div id='commandLog'>
+                <ul id='logBox'>
+                    <li class='c_controlsBlock__command' id='commandPlaceholder'>
+                        <i>Sent commands go here</i>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </body>

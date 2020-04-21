@@ -26,7 +26,8 @@ html {
 /* f9b9f2 - electric lavender */
 /* e2efde - platinum */
 /* 9f9aa4 - manatee */
-
+/* 82aeb1 - pewter blue */
+/* 247ba0 - lapis lazuli*/
 
 /* Nav Bar */
 .navHeader {
@@ -81,4 +82,84 @@ html {
 
 .c_aboutUs__Header {
     color: white;
+}
+
+/* Command Log Styling */
+
+#logBox {
+    padding: 16px;
+
+    box-sizing: border-box;
+}
+
+#commandLog {
+    width: 100%;
+}
+.c_controlsBlock__commandLog {
+    width: 100%;
+    align-self: start;
+}
+
+#logBox {
+    background-color: #a7acd9;
+    overflow: auto;
+    list-style: none;
+    box-shadow: -3px 7px 15px 3px rgba(0,0,0,0.33);
+    max-height: 380px;
+}
+
+.c_controlsBlock__command {
+    color: white;
+}
+
+.c_controlsBlock__emergencyMessage {
+    font-weight: bold;
+    color: #ff1053;
+}
+
+.c_controlsBlock__heading {
+    font-weight: bold;
+    color: #d1f0b1;
+}
+
+.c_controlsBlock__label {
+    color: white;
+}
+
+/* Input Styling */
+
+.c_controlsBlock__button {
+    font-family: inherit;
+    background-color: #9f9aa4 ;
+    border-radius: 3px;
+    padding: 0.5rem;
+    margin: 1rem;
+    width: max-content;
+}
+
+.c_controlsBlock__statusButton {
+    font-family: inherit;
+    background-color: #f9b9f2;
+    border-radius: 3px;
+    padding: 0.5rem;
+    margin: 1rem;
+    width: max-content;
+}
+
+.c_controlsBlock__buttonText {
+    color: white;
+    font-weight: bold;
+}
+
+.c_controlsBlock__statusButtonText {
+    color: white;
+    font-weight: bold;
+}
+
+.c_controlsBlock__buttonContainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    max-width: 1440px;
+    gap: 1rem;
+    justify-items: center;
 }
