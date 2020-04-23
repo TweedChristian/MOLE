@@ -290,7 +290,7 @@ function dataSwitch(){
         dynamicDataContainer.active = false;
         plot(staticDataContainer.dataArray, testVisSVG);
     }
-    if(selector.value == "dynamicTest"){
+    else if(selector.value == "dynamicTest"){
         staticDataContainer.active = false;
         dynamicDataContainer.active = true;
         plot(dynamicDataContainer.dataArray, testVisSVG);

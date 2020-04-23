@@ -469,7 +469,8 @@ function handleControls(data, response) {
     if (data) {
         processControls(data);
         let result = sendToDataLayer(data);
-        writeToDb(result);
+        console.log("reeeeee", result);
+        //writeToDb(result);
         // result = null;
         if (result && result.type !== 'error') {
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
@@ -735,15 +736,15 @@ function processInitializedPath(dataJSON) {
  * @returns the response from the python server, or null if we fail the request
  */
 function sendToDataLayer(json) {
+    let dataLayerResponse;
     try {
         //handleDataLayerResponse(json);
         socket.write(JSON.stringify(json));
         socket.on('data', function(data){
             //Data comes in as a buffer
-            let dataLayerResponse = JSON.parse(data.toString());
+            dataLayerResponse = JSON.parse(data.toString());
             //handleDataLayerResponse(dataLayerResponse);
             console.log("ree",dataLayerResponse);
-            return dataLayerResponse;
         })
     }
     catch (error) {
@@ -755,6 +756,9 @@ function sendToDataLayer(json) {
         };
         writeToDb(err)
         return err; //For error checking above
+    }
+    finally{
+        return dataLayerResponse;
     }
 }
 

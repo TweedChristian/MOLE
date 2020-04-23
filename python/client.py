@@ -128,7 +128,17 @@ def parsePathMessage(message):
     yaw = message['yaw']
     pitch = message['pitch']
     roll = message['roll']
-    arduino.write('1')
+    distance = message['distance']
+    pathMessage = '1,'
+    pathMessage += str(yaw)
+    pathMessage += ','
+    pathMessage += str(pitch)
+    pathMessage += ','
+    pathMessage += str(roll)
+    pathMessage += ','
+    pathMessage += str(distance)
+    pathMessage += '!'
+    print("sending path message to arduino ", pathMessage)
     
 '''
 * Sends a special message to the arduino to inidcate it should halt
@@ -147,9 +157,10 @@ def sendUpstream(message, socket):
     message = message.encode('ascii')
     try:
         socket.sendall(message)
-        return 1
+        return True
     except:
-        return 0
+        print("Error sending upstream")
+        return False
 '''
 * Parses the comma-separated string from the arduino into a JSON object to send to the node server
 * @param replyString {str} the comma separated string from arduino
@@ -158,43 +169,60 @@ def sendUpstream(message, socket):
 def parseReply(replyString):
     splitString = replyString.split(',')
     print(splitString)
-    replyJSON = {
-        'type': splitString[0],
-        'imuAccX': splitString[1],
-        'imuAccY': splitString[2],
-        'imuAccZ': splitString[3],
-        'imuYaw': splitString[4],
-        'imuPitch': splitString[5],
-        'imuRoll': splitString[6], #we are not controlling roll, maybe dont need
-        'boringRPM': splitString[7],
-        'extensionRPM': splitString[8],
-        'drillTemp': splitString[9],
-        'steeringYaw': splitString[10],
-        'steeringPitch': splitString[11],
-        'frontPSI': splitString[12],
-        'backPSI': splitString[13],
-    }
+    if(splitString[0] == 'status'):
+        replyJSON = {
+            'type': splitString[0],
+            'imuAccX': splitString[1],
+            'imuAccY': splitString[2],
+            'imuAccZ': splitString[3],
+            'imuYaw': splitString[4],
+            'imuPitch': splitString[5],
+            'imuRoll': splitString[6], #we are not controlling roll, maybe dont need
+            'boringRPM': splitString[7],
+            'extensionRPM': splitString[8],
+            'drillTemp': splitString[9],
+            'steeringYaw': splitString[10],
+            'steeringPitch': splitString[11],
+            'frontPSI': splitString[12],
+            'backPSI': splitString[13]
+        }
+    elif(splitString[0] == 'pathStatus'):
+        replyJSON ={
+            'type': splitString[0],
+            'driftX': splitString[1],
+            'driftY': splitString[2],
+            'driftZ': splitSTring[3]
+        }
     return replyJSON
 
 
 class arduinoStub():
     def __init__(self):
         self.sentReply = False
+        self.messageInType = None
     def readline(self):
         if(self.sentReply == False):
             self.sentReply = True
-            print("reading from arduino stub")
-            return 'status,1.1,2.2,3.3,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0'
+            if(self.messageInType == 'controls'):
+                print("reading controls status from arduino stub")
+                return 'status,1.1,2.2,3.3,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0'
+            elif(self.messageInType == 'path'):
+                print("reading path status from arduino stub")
+                return 'pathStatus,1.5,2.5,3.5'
         else:
             self.sentReply = False
             return '~\r\n'
     def write(self, message):
         if(message[0] == '0'):
-            if(len(message.split(',')) == 8):
+            if(len(message.split(',')) == 7):
+                print("Control Message Recieved")
+                self.messageInType = "controls"
                 pass
             else:
                 print("Bad Control Message Recieved")
         elif(message[0] == '1'):
+            print("path message recieved")
+            self.messageInType = 'path'
             pass
         elif(message[0] == '3'):
             print("Error Message Recieved")
