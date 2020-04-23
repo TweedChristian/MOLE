@@ -68,7 +68,6 @@ startNetServer();
 
 //Initializing our http server
 const httpServer = http.createServer(function (request, response) {
-    // console.log(request.method);
     if (request.method === 'GET') {
         handleGet(request, response);
     }
@@ -186,7 +185,6 @@ function handleGet(request, response) {
     //Reading from the db
     if (request.url.includes('/db')) {
         let dbItem = request.url.slice(4);
-        console.log(dbItem);
         // let branches = dbItem.split('/');
         if (dbItem) {
             readDb(dbItem, response);
@@ -839,6 +837,7 @@ process.on('SIGTERM', () => {
  * @param {JSON} dataJSON 
  */
 function writeToDb(dataJSON) {
+    console.log('WRITING TO DB');
     console.log(dataJSON)
     switch (dataJSON.type) {
         //A pathing command
@@ -852,7 +851,6 @@ function writeToDb(dataJSON) {
 
         //Error messages
         case 'error':
-            console.log("ERROR CHECK");
             console.log(dataJSON.message);
             db.get('errors')
                 .push(dataJSON.message)
@@ -863,14 +861,9 @@ function writeToDb(dataJSON) {
 
         //Manual Controls 
         case 'controls':
-            console.log(dataJSON)
             db.get('sentControls')
                 .push(dataJSON)
                 .write();
-
-            console.log(
-                db.get('sentControls').value()
-            )
 
             updateDbTime();
             break;
@@ -937,8 +930,6 @@ function writeToDb(dataJSON) {
             break;
 
         case 'correctPath':
-            //Will Only Send One Point at a Time
-            // [x,y,z,1]
             db.get('correctedPathPoints')
                 .push(dataJSON.point)
                 .write();

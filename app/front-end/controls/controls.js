@@ -10,29 +10,51 @@ function setupControls() {
     })
 }
 
-function addCommand(message, emergency) {
+// function addCommand(message, emergency) {
+//     const start = document.getElementById('commandPlaceholder')
+//     if(start){
+//         start.remove();
+//     }
+//     if(emergency){
+//         let ul = document.getElementById('logBox');
+//         let li = document.createElement('li');
+//         li.classList.add('c_controlsBlock__emergencyMessage');
+//         li.appendChild(document.createTextNode(message));
+//         ul.insertAdjacentElement('afterbegin', li);
+//     }
+//     else{
+//         let ul = document.getElementById('logBox');
+//         let li = document.createElement('li')
+//         li.classList.add('c_controlsBlock__command');
+//         li.appendChild(document.createTextNode(message))
+//         ul.insertAdjacentElement('afterbegin', li);
+//     }
+// }
+
+function addCommand(message, color) {
     const start = document.getElementById('commandPlaceholder')
     if(start){
         start.remove();
     }
-    if(emergency){
-        let ul = document.getElementById('logBox');
-        let li = document.createElement('li');
+    let ul = document.getElementById('logBox');
+    let li = document.createElement('li');
+    if(color === 'red'){
+        
         li.classList.add('c_controlsBlock__emergencyMessage');
-        li.appendChild(document.createTextNode(message));
         ul.insertAdjacentElement('afterbegin', li);
+    }
+    else if(color === 'green'){
+        li.classList.add('c_controlsBlock__heading');
     }
     else{
-        let ul = document.getElementById('logBox');
-        let li = document.createElement('li')
-        li.classList.add('c_controlsBlock__command');
-        li.appendChild(document.createTextNode(message))
-        ul.insertAdjacentElement('afterbegin', li);
+        li.classList.add('c_controlsBlock__command');      
     }
+    li.appendChild(document.createTextNode(message));
+    ul.insertAdjacentElement('afterbegin', li);
 }
 
 function emergency(){
-    addCommand('EMERGENCY STOP', true);
+    addCommand('EMERGENCY STOP', 'red');
 }
 
 
@@ -50,18 +72,19 @@ function send(req) {
 
 async function checkResponseStatus(response){
     let body = await response.json();
-    // console.log(body);
+    console.log(body);
     // addCommand(`--${body.message}--`, true);
     switch(response.status){
         case 200:
             console.log("OK!");
+            handleResponse(body);
             break;
         case 400:
             console.log("COMMAND ERROR");
-            addCommand(body.message, true);
+            addCommand(body.message, 'red');
             break;
         case 500:
-            addCommand(response.statusText, true);
+            addCommand(response.statusText, 'red');
             console.log("SERVER ERROR");
             break;
         default:
@@ -74,6 +97,7 @@ function handleResponse(response) {
     console.log(response);
     switch (response.type) {
         case 'status':
+            console.log("NOT DEFAULT");
             handleStatus(response);
             break;
         case 'error':
@@ -86,8 +110,8 @@ function handleResponse(response) {
 }
 
 function handleError(response){
-    addCommand(response.message, true);
-    addCommand("ERROR: ", true);
+    addCommand(response.message, 'red');
+    addCommand("ERROR: ", 'red');
 }
 
 function handleStatus(response) {
