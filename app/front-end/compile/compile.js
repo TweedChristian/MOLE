@@ -41,3 +41,81 @@ function testCall(route){
         }
     })
 }
+
+function testErrorPost(message){
+    let json = {
+        type: 'error',
+        message: 'Testing error message'
+    };
+    fetch('/submit', {
+        method: 'POST',
+        body: JSON.stringify(json),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(response => response.json())
+        .then(body => {
+            console.log(body);
+            addCommand(JSON.stringify(body));
+        });
+}
+
+function testPathPost(){
+    let pathJSON = {
+        type: 'path',
+        cartesian: [1,3,2],
+        euler: [0,60,0],
+        distance: 5,
+        index: 0
+    }
+    fetch('/submit', {
+        method: 'POST',
+        body: JSON.stringify(pathJSON),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(response => response.json())
+        .then(body => {
+            console.log(body);
+        });
+}
+
+function testCorrectedPathPost() {
+        let pathJSON = {
+            type: 'correctedPath',
+            cartesian: [0,0,2],
+            euler: [2,60,15],
+            distance: 2,
+            index: 1
+        }
+        fetch('/submit', {
+            method: 'POST',
+            body: JSON.stringify(pathJSON),
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(response => response.json())
+            .then(body => {
+                console.log(body);
+            });
+}
+
+function testCorrectedPathPost() {
+    let pathJSON = {
+        type: 'correctedPath',
+        cartesian: [0,0,2],
+        euler: [2,60,15],
+        distance: 2,
+        index: 1
+    }
+    fetch('/submit', {
+        method: 'POST',
+        body: JSON.stringify(pathJSON),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(response => response.json())
+        .then(body => {
+            console.log(body);
+        });
+}
