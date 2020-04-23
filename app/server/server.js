@@ -467,9 +467,9 @@ function handleAddObstacle(dataJSON, response) {
  */
 function handleControls(data, response) {
     if (data) {
-        let result = processControls(data);
+        processControls(data);
+        let result = sendToDataLayer(data);
         writeToDb(result);
-        // let result = sendToDataLayer(data);
         // result = null;
         if (result && result.type !== 'error') {
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
@@ -736,35 +736,15 @@ function processInitializedPath(dataJSON) {
  */
 function sendToDataLayer(json) {
     try {
-        let status = {
-            type: 'status',
-            imuAccX: 1.0,
-            imuAccY: 0.0,
-            imuAccZ: 1.2,
-            imuYaw: 1.0,
-            imuPitch: 1.0,
-            imuRoll: 0.0,
-            boringRPM: 1.1,
-            extensionRate: 1.0,
-            drillTemp: 100,
-            steeringYaw: 1.0,
-            steeringPitch: 10.0,
-            frontPSI: 90.0,
-            backPSI: 80.0
-        }
-        //Does nothing for the time being
-        handleDataLayerResponse(json);
-        return JSON.stringify(status);
-        // socket.write(JSON.stringify(json));
-        // socket.on('data', function(data){
-        //     // console.log(data.toString());
-
-        //     //I'm not sure why we're closing the server
-        //     pythonServer.close();
-
-        //     //Data comes in as a buffer
-        //     return data.toString();
-        // })
+        //handleDataLayerResponse(json);
+        socket.write(JSON.stringify(json));
+        socket.on('data', function(data){
+            //Data comes in as a buffer
+            let dataLayerResponse = JSON.parse(data.toString());
+            //handleDataLayerResponse(dataLayerResponse);
+            console.log("ree",dataLayerResponse);
+            return dataLayerResponse;
+        })
     }
     catch (error) {
         console.log("ERROR OCCURED");
@@ -788,6 +768,7 @@ function handleDataLayerResponse(json) {
     if (json) {
         switch (json.type) {
             case 'status':
+                console.log('status message got')
                 writeToDb(json);
                 return json;
             case 'error':
@@ -838,8 +819,6 @@ process.on('SIGTERM', () => {
  * @param {JSON} dataJSON 
  */
 function writeToDb(dataJSON) {
-    console.log('WRITING TO DB');
-    console.log(dataJSON)
     switch (dataJSON.type) {
         //A pathing command
         case 'path':

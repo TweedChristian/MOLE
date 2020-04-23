@@ -156,23 +156,50 @@ def sendUpstream(message, socket):
 * Stub for now with dummy data, sue me
 '''
 def parseReply(replyString):
+    splitString = replyString.split(',')
+    print(splitString)
     replyJSON = {
-        'type': 'status',
-        'imuAccX': 1.1,
-        'imuAccY': 2.2,
-        'imuAccZ': 3.3,
-        'imuYaw': 1.0,
-        'imuPitch': 1.0,
-        'imuRoll': 1.0, #we are not controlling roll, maybe dont need
-        'boringRPM': 1.0,
-        'extensionRPM': 1.0,
-        'drillTemp': 1.0,
-        'steeringYaw': 1.0,
-        'steeringPitch': 1.0,
-        'frontPSI': 1.0,
-        'backPSI': 1.0
+        'type': splitString[0],
+        'imuAccX': splitString[1],
+        'imuAccY': splitString[2],
+        'imuAccZ': splitString[3],
+        'imuYaw': splitString[4],
+        'imuPitch': splitString[5],
+        'imuRoll': splitString[6], #we are not controlling roll, maybe dont need
+        'boringRPM': splitString[7],
+        'extensionRPM': splitString[8],
+        'drillTemp': splitString[9],
+        'steeringYaw': splitString[10],
+        'steeringPitch': splitString[11],
+        'frontPSI': splitString[12],
+        'backPSI': splitString[13],
     }
     return replyJSON
+
+
+class arduinoStub():
+    def __init__(self):
+        self.sentReply = False
+    def readline(self):
+        if(self.sentReply == False):
+            self.sentReply = True
+            print("reading from arduino stub")
+            return 'status,1.1,2.2,3.3,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0'
+        else:
+            self.sentReply = False
+            return '~\r\n'
+    def write(self, message):
+        if(message[0] == '0'):
+            if(len(message.split(',')) == 8):
+                pass
+            else:
+                print("Bad Control Message Recieved")
+        elif(message[0] == '1'):
+            pass
+        elif(message[0] == '3'):
+            print("Error Message Recieved")
+        else:
+            print("Unknown message type sent to arduino")
 
 if __name__ == "__main__":
 
@@ -184,15 +211,17 @@ if __name__ == "__main__":
 
     serialPort = sys.argv[1]
     port = 7086
-    try:
-        arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
-    except:
-        print("Could not establish serial connection to port " + serialPort)
-        exit()
+    if(serialPort == "test"):
+        arduino = arduinoStub()
+    else:
+        try:
+            arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
+        except:
+            print("Could not establish serial connection to port " + serialPort)
+            exit()
     try:
         s = socket.socket()
         s.connect(('127.0.0.1', port))
-        s.sendall('jef')
     except:
         print("Could not establish socket connection to server")
         exit()
@@ -234,7 +263,7 @@ if __name__ == "__main__":
                     print("Parsed Arduino reply")
                     break
                 print("Arduino says: " + reply)
-        replyJSON = parseReply(reply)
+                replyJSON = parseReply(reply)
         print(json.dumps(replyJSON))
         if(sendUpstream(json.dumps(replyJSON),s)):
             print("sent status")

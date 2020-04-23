@@ -22,24 +22,25 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  while(!messageEnd){
-    parseMessage();
-    if(newData == true){
-      newData = false;
-      message[index] = messageFrag;
-      index ++;
-     messageFrag = "";
+  if(Serial.available()){
+    while(!messageEnd){
+      parseMessage();
+      if(newData == true){
+        newData = false;
+        message[index] = messageFrag;
+        index ++;
+       messageFrag = "";
+      }
+    }
+    messageEnd = false;
+    index = 0;
+    if(message[0] == "0"){
+      parseCommandMessage();
+    }
+    else if(message[0] == "3"){
+      parseErrorMessage();
     }
   }
-  messageEnd = false;
-  index = 0;
-  if(message[0] == "0"){
-    parseCommandMessage();
-  }
-  else if(message[0] == "3"){
-    parseErrorMessage();
-  }
-
 }
 
 void parseMessage(){
