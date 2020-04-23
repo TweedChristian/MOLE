@@ -100,22 +100,62 @@ function testCorrectedPathPost() {
             });
 }
 
-function testCorrectedPathPost() {
-    let pathJSON = {
-        type: 'correctedPath',
-        cartesian: [0,0,2],
-        euler: [2,60,15],
-        distance: 2,
-        index: 1
-    }
+function testPathInitialize() {
+    let pathInitJSON = {
+        type: 'pathInitialize',
+        obstacles: [[
+            [-1,1,1,1],
+            [-1,1,-1,1],
+            [1,1,1,1],
+            [1,1,-1,1],
+            [-1,-1,-1,1],
+            [1,-1,-1,1],
+            [-1,-1,1,1],
+            [1,-1,1,1]
+        ]],
+        points: [
+            [6,1,0,1],
+            [10,2,2,1],
+            [2,3,4,1],
+            [4,4,6,6]
+        ]
+    };
+
     fetch('/submit', {
         method: 'POST',
-        body: JSON.stringify(pathJSON),
+        body: JSON.stringify(pathInitJSON),
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
     })
-        .then(response => response.json())
-        .then(body => {
-            console.log(body);
-        });
+    .then(response => response.json())
+    .then(body => {
+        console.log(body);
+    });
+}
+
+function testAddObstacle() {
+    let obstacleJSON = {
+        type: 'addObstacle',
+        obstacle: [[
+            [-1,1,1,1],
+            [-1,1,-1,1],
+            [1,1,1,1],
+            [1,1,-1,1],
+            [-1,-1,-1,1],
+            [1,-1,-1,1],
+            [-1,-1,1,1],
+            [1,-1,1,1]
+        ]],
+    };
+
+    fetch('/submit', {
+        method: 'POST',
+        body: JSON.stringify(obstacleJSON),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then( response => response.json())
+    .then( body => {
+        console.log(body);
+    })
 }

@@ -434,6 +434,7 @@ function handleAddObstacle(dataJSON, response) {
     //Doesn't Get Sent to the Data Layer
     if (dataJSON) {
         let result = processAddObstacle(dataJSON);
+        //writeToDb(result);
         if (result && result.type !== 'error') {
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(result));
@@ -548,6 +549,7 @@ function handlePathing(data, response) {
         console.log(data);
         let result = processPathing(data);
         //let result = sendToDataLayer(data);
+        writeToDb(result);
         if (result && result.type !== 'error') {
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(result), 'utf-8')
@@ -669,7 +671,7 @@ function processPathing(dataJSON) {
  */
 function processAddObstacle(dataJSON) {
     try {
-        writeToDb(dataJSON);
+        writeToDb(dataJSON.obstacle);
         return dataJSON;
     }
     catch (err) {
