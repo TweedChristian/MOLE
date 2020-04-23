@@ -165,7 +165,7 @@ function inflate(location) {
         }
     }
     let controlsJSON = {
-        type: 'compile',
+        type: 'controls',
         boringSpeed: controls[0],
         extensionRate: controls[1],
         turningX: controls[2],
