@@ -468,6 +468,7 @@ function handleAddObstacle(dataJSON, response) {
 function handleControls(data, response) {
     if (data) {
         let result = processControls(data);
+        writeToDb(result);
         // let result = sendToDataLayer(data);
         // result = null;
         if (result && result.type !== 'error') {
