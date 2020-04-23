@@ -80,3 +80,33 @@ html {
     margin-top: 0.25rem;
     color: rgba(0,0,0,0.75);
 }
+
+.c_plotButton {
+    font-family: inherit;
+    background-color: #9f9aa4 ;
+    border-radius: 3px;
+    padding: 1rem;
+    margin: 1rem;
+    min-width: 125px;
+}
+
+.c_stopButton {
+    padding: 1rem;
+    border-radius: 6px;
+    font-family: inherit;
+    background-color: #ff1053;
+    min-width: 125px;
+}
+
+.c_visDataSelector {
+    font-family: inherit;
+    background-color: #9f9aa4 ;
+    border-radius: 3px;
+    padding: 1rem;
+    margin: 1rem;
+    min-width: 125px;
+}
+
+.c_visDataSelectorOption{
+    padding: 1rem;
+}

@@ -15,8 +15,7 @@ let VERTICAL_OFFSET = 30;
 let intervalFN= 0;
 let heightScale;
 let widthScale;
-let timeScale;
-let timeScaleMax = 5;
+let widthScaleMax = 5;
 let heightScaleMax = 1;
 let heightScaleMin = -1;
 let dynamicDataContainer = {
@@ -75,7 +74,7 @@ function initialize(svgName, width, height, xAxis, yAxis){
 		.domain([-1,1])
 		.range([600,0]);
 	widthScale = d3.scaleLinear()
-		.domain([0,timeScaleMax])
+		.domain([0,widthScaleMax])
 		.range([0,width]);
 	let heightAxis = d3.axisLeft(heightScale);
 	let timeAxis = d3.axisBottom(widthScale);
@@ -96,9 +95,9 @@ function initialize(svgName, width, height, xAxis, yAxis){
  * @param {*} plotSVG D3 selection of plot elements to draw onto, from initialize()
  */
 function plot(plotData, plotSVG){
-    	if(plotData.length >= timeScaleMax){
-		timeScaleMax *= 2;
-		widthScale.domain([0,timeScaleMax]);
+    	if(plotData.length >= widthScaleMax){
+		widthScaleMax *= 2;
+		widthScale.domain([0,widthScaleMax]);
 		plotSVG.select(".timeAxis")
 			.call(d3.axisBottom(widthScale));
     }
@@ -230,15 +229,6 @@ function stopButton(){
 }
 
 /**
- * Grabs value from input box and pushes it to data array
- */
-function getInputFromBox() {
-    let box = document.getElementById("inputBoxTest");
-    console.log(box.value);
-    addData(+box.value,testVisSVG, dynamicDataContainer);
-    box.value='';
-}
-/**
  * Adds data to a data container, plots it if it is the active container
  * @param {*} value value to add to data container
  * @param {*} svg d3 selection of plot the data is associated with
@@ -275,7 +265,17 @@ function addRandom(){
 function clearPlot(){
     dynamicDataContainer.dataArray = [];
     dataIndex = 0;
-    plot([], testVisSVG, 640);
+    heightScaleMin = -1;
+    heightScaleMax = 1;
+    widthScaleMax = 5;
+    heightScale.domain([heightScaleMin, heightScaleMax])
+    color2.domain([heightScaleMin, heightScaleMax])
+    widthScale.domain([0, widthScaleMax])
+    testVisSVG.select(".timeAxis")
+        .call(d3.axisBottom(widthScale));
+    testVisSVG.select(".heightAxis")
+        .call(d3.axisLeft(heightScale));
+    plot([], testVisSVG);
     console.log(testData)
 }
 /**
@@ -295,22 +295,11 @@ function dataSwitch(){
         dynamicDataContainer.active = true;
         plot(dynamicDataContainer.dataArray, testVisSVG);
     }
-    if(selector.value == "drillTemp"){
-        staticDataContainer.active = false;
-        dynamicDataContainer.active = true
+    else{
         sendDbRequest({
             type: 'dbRequest',
-            data: '/db/status/drillTemp'
-        })
-        dataBaseDataContainer.active = true;
-        console.log("calling plot with", dataBaseDataContainer.dataArray)
-        plot(dataBaseDataContainer.dataArray, testVisSVG)
-    }
-    if(selector.value == "status"){
-        sendDbRequest({
-            type: 'dbRequest',
-            data: '/db/status'
-        })
+            data: '/db/status/' + selector.value
+        });
     }
 }
 
