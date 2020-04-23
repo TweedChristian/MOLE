@@ -15,6 +15,10 @@ html {
     margin: auto;
 }
 
+.c_visObject{
+    border: 1px solid red;
+    background-color: #93c6d6;
+}
 /* e8c547  - YELLOW */
 /* ff1053 - important red*/
 /* 3e4c5e - outer space */
