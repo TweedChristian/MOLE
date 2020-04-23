@@ -102,6 +102,16 @@ controls
 
 path
 
+{
+    type: 'error',
+    cartesian: [x,y,z],
+    euler: [yaw,pitch,roll],
+    distance
+    index
+}
+
+only send euler and ypr to serializer
+
 pathInitialize
 
 correctPath

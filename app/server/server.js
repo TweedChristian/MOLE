@@ -296,7 +296,7 @@ function handlePost(request, response) {
                 default:
                     let err = {
                         type: 'error',
-                        error: 'Your POST request did not follow the typing conventions'
+                        message: 'Your POST request did not follow the typing conventions'
                     };
                     writeToDb(err);
                     response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
@@ -307,7 +307,7 @@ function handlePost(request, response) {
             response.writeHead(400, 'No Command', { 'Content-Type': 'text/plain' });
             let err = {
                 type: 'error',
-                error: 'Your POST request did not contain any command information'
+                message: 'Your POST request did not contain any command information'
             }
             writeToDb(err);
             response.end(JSON.stringify(err));
@@ -507,7 +507,7 @@ function handleControls(data, response) {
  */
 function handleError(data, response) {
     if (data) {
-        processError(data);
+        let result = processError(data);
         console.log(data.message);
         // let result = sendToDataLayer(data);
         if (result) {
@@ -649,9 +649,9 @@ function processPathing(dataJSON) {
         writeToDb(dataJSON);
         return {
             type: 'path',
-            yaw: dataJSON.yaw,
-            pitch: dataJSON.pitch,
-            roll: dataJSON.roll,
+            yaw: dataJSON.euler[0],
+            pitch: dataJSON.euler[1],
+            roll: dataJSON.euler[2],
             distance: dataJSON.distance
         };
     }
@@ -690,9 +690,9 @@ function processCorrectedPath(dataJSON) {
         writeToDb(dataJSON);
         return {
             type: 'path',
-            yaw: dataJSON.yaw,
-            pitch: dataJSON.pitch,
-            roll: dataJSON.roll,
+            yaw: dataJSON.euler[0],
+            pitch: dataJSON.euler[1],
+            roll: dataJSON.euler[2],
             distance: dataJSON.distance
         };
     }
@@ -837,21 +837,24 @@ process.on('SIGTERM', () => {
  * @param {JSON} dataJSON 
  */
 function writeToDb(dataJSON) {
+    console.log(dataJSON)
     switch (dataJSON.type) {
-
         //A pathing command
         case 'path':
             db.get('sentPaths')
-                .push(dataJSON);
+                .push(dataJSON)
+                .write();
 
             updateDbTime();
             break;
 
         //Error messages
         case 'error':
-
+            console.log("ERROR CHECK");
+            console.log(dataJSON.message);
             db.get('errors')
-                .push(dataJSON.message);
+                .push(dataJSON.message)
+                .write();
 
             updateDbTime();
             break;
@@ -889,7 +892,7 @@ function writeToDb(dataJSON) {
             currentState.frontPSI.push(dataJSON.frontPSI);
             currentState.backPSI.push(dataJSON.backPSI);
 
-            db.set('controlsStatusResponses', currentState);
+            db.set('controlsStatusResponses', currentState).write();
 
             updateDbTime();
             break;
@@ -903,7 +906,7 @@ function writeToDb(dataJSON) {
             currentDriftState.driftY.push(dataJSON.driftY);
             currentDriftState.driftZ.push(dataJSON.driftZ);
 
-            db.set('pathStatusResponses', currentDriftState);
+            db.set('pathStatusResponses', currentDriftState).write();
 
             updateDbTime();
             break;
@@ -914,8 +917,8 @@ function writeToDb(dataJSON) {
             let points = dataJSON.points;
             let obstacles = dataJSON.obstacles;
 
-            db.set('idealPathPoints', points);
-            db.set('obstacles', obstacles);
+            db.set('idealPathPoints', points).write();
+            db.set('obstacles', obstacles).write();
 
             updateDbTime();
             break;
@@ -925,7 +928,8 @@ function writeToDb(dataJSON) {
         case 'addObstacle':
 
             db.get('obstacles')
-                .push(dataJSON.obstacle);
+                .push(dataJSON.obstacle)
+                .write();
 
             updateDbTime();
             break;
@@ -935,6 +939,7 @@ function writeToDb(dataJSON) {
             // [x,y,z,1]
             db.get('correctedPathPoints')
                 .push(dataJSON.point)
+                .write();
 
             updateDbTime();
             break;
@@ -943,7 +948,8 @@ function writeToDb(dataJSON) {
         default:
 
             db.get('errors')
-                .push('Failed to Match the JSON Object');
+                .push('Failed to Match the JSON Object')
+                .write();
 
             updateDbTime();
     }
