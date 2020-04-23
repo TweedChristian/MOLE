@@ -8,7 +8,8 @@
     <link rel='stylesheet' type='text/css' href='datavis/style.css'>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
         rel="stylesheet">
-    <script src="datavis/datavis.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="datavis/dataVis.js" defer></script>
 </head>
 
 
@@ -36,6 +37,23 @@
         </nav>
     </header>
     <div class='c_pageContainer'>
-        <h1>Tom add your stuff here</h1>
+          <div id="buttons">
+            <button type="button" class= 'c_plotButton'name="kill" onclick="clearPlot();">Clear Plot</button>
+            <button type="button" class= 'c_plotButton'name="random" onclick="addRandom();">Plot Random</button>
+            <button type="button" class= 'c_plotButton'name="sin" onclick="plotSin(100);">Plot sin</button>
+            <button type="button" class= 'c_stopButton'name="stop" onclick="stopButton();">Stop</button>
+          </div>
+          <div>
+            <select id="dataSelector" class='c_visDataSelector' onchange='dataSwitch();'>
+              <option class="c_visDataSelectorOption" value="dynamicTest">Dynamic Test Data</option>
+              <option class="c_visDataSelectorOption" value = "staticTest">Static Test Data</option>
+              <option class="c_visDataSelectorOption" value = "drillTemp">Boring Head Temp</option>
+              <option class="c_visDataSelectorOption" value = "boringRPM">Boring RPM</option>
+              <option class="c_visDataSelectorOption" value = "extensionRate">Extension Rate</option>
+            </select>
+          </div>
+          <div id="visWrapper">
+            <div id="dataviz"></div>
+          </div>
     </div>
 </body>
