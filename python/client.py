@@ -191,7 +191,7 @@ def parseReply(replyString):
             'type': splitString[0],
             'driftX': splitString[1],
             'driftY': splitString[2],
-            'driftZ': splitSTring[3]
+            'driftZ': splitString[3]
         }
     return replyJSON
 
@@ -240,6 +240,7 @@ if __name__ == "__main__":
     serialPort = sys.argv[1]
     port = 7086
     if(serialPort == "test"):
+        print('test init')
         arduino = arduinoStub()
     else:
         try:

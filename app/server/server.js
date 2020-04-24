@@ -468,24 +468,27 @@ function handleAddObstacle(dataJSON, response) {
 function handleControls(data, response) {
     if (data) {
         processControls(data);
-        let result = sendToDataLayer(data);
-        console.log("reeeeee", result);
-        //writeToDb(result);
-        // result = null;
-        if (result && result.type !== 'error') {
-            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
-            //Result will be a JSON string
-            response.end(JSON.stringify(result), 'utf-8');
-        }
-        else {
-            let err = {
-                type: 'error',
-                message: 'Could Not Connect To The Data Layer'
-            };
-            writeToDb(err);
-            response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(err), 'utf-8');
-        }
+        sendToDataLayer(data)
+            .then(result => {
+                if (result && result.type !== 'error') {
+                    response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+                    //Result will be a JSON string
+                    response.end(JSON.stringify(result), 'utf-8');
+                }
+                else {
+                    let err = {
+                        type: 'error',
+                        message: 'Could Not Connect To The Data Layer'
+                    };
+                    writeToDb(err);
+                    response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+                    response.end(JSON.stringify(err), 'utf-8');
+                }
+            })
+            .catch(err => {
+                console.log("BRRRRR")
+            });
+       
     }
     else {
         let res = {
@@ -736,30 +739,31 @@ function processInitializedPath(dataJSON) {
  * @returns the response from the python server, or null if we fail the request
  */
 function sendToDataLayer(json) {
-    let dataLayerResponse;
-    try {
-        //handleDataLayerResponse(json);
-        socket.write(JSON.stringify(json));
-        socket.on('data', function(data){
-            //Data comes in as a buffer
-            dataLayerResponse = JSON.parse(data.toString());
-            //handleDataLayerResponse(dataLayerResponse);
-            console.log("ree",dataLayerResponse);
-        })
-    }
-    catch (error) {
-        console.log("ERROR OCCURED");
-        console.log(error);
-        let err = {
-            type: 'error',
-            message: error
-        };
-        writeToDb(err)
-        return err; //For error checking above
-    }
-    finally{
-        return dataLayerResponse;
-    }
+    return new Promise((resolve, reject) => {
+        let dataLayerResponse;
+        let test;
+        try {
+            //handleDataLayerResponse(json);
+            socket.write(JSON.stringify(json));
+            socket.on('data', function(data){
+                //Data comes in as a buffer
+                dataLayerResponse = JSON.parse(data.toString());
+                console.log("ree",dataLayerResponse);
+                handleDataLayerResponse(dataLayerResponse);
+                resolve(dataLayerResponse);
+            });
+        }
+        catch (error) {
+            console.log("ERROR OCCURED");
+            console.log(error);
+            let err = {
+                type: 'error',
+                message: error
+            };
+            writeToDb(err)
+            reject(err); //For error checking above
+        }
+    });
 }
 
 
