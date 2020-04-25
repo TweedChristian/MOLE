@@ -614,7 +614,7 @@ function handleOtherRequest(response) {
 function processControls(controls) {
     try {
         writeToDb(controls);
-        return status;
+        return controls;
     }
     catch (err) {
         let errMsg = {
@@ -740,14 +740,12 @@ function processInitializedPath(dataJSON) {
 function sendToDataLayer(json) {
     return new Promise((resolve, reject) => {
         let dataLayerResponse;
-        let test;
         try {
             //handleDataLayerResponse(json);
             socket.write(JSON.stringify(json));
             socket.on('data', function(data){
                 //Data comes in as a buffer
                 dataLayerResponse = JSON.parse(data.toString());
-                console.log("ree",dataLayerResponse);
                 handleDataLayerResponse(dataLayerResponse);
                 resolve(dataLayerResponse);
             });
