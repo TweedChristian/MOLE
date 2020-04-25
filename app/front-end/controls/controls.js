@@ -71,26 +71,32 @@ function send(req) {
 
 
 async function checkResponseStatus(response){
-    let body = await response.json();
-    console.log(body);
-    // addCommand(`--${body.message}--`, true);
-    switch(response.status){
-        case 200:
-            console.log("OK!");
-            handleResponse(body);
-            break;
-        case 400:
-            console.log("COMMAND ERROR");
-            addCommand(body.message, 'red');
-            break;
-        case 500:
-            addCommand(response.statusText, 'red');
-            console.log("SERVER ERROR");
-            break;
-        default:
-            console.log(response.status);
-            break;
+    try {
+        let body = await response.json();
+        console.log(body);
+        // addCommand(`--${body.message}--`, true);
+        switch(response.status){
+            case 200:
+                console.log("OK!");
+                handleResponse(body);
+                break;
+            case 400:
+                console.log("COMMAND ERROR");
+                addCommand(body.message, 'red');
+                break;
+            case 500:
+                addCommand(response.statusText, 'red');
+                console.log("SERVER ERROR");
+                break;
+            default:
+                console.log(response.status);
+                break;
+        }
     }
+    catch(err) {
+        
+    }
+    
 }
 
 function handleResponse(response) {

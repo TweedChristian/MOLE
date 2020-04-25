@@ -467,8 +467,8 @@ function handleAddObstacle(dataJSON, response) {
  */
 function handleControls(data, response) {
     if (data) {
-        processControls(data);
-        sendToDataLayer(data)
+        let processedData = processControls(data);
+        sendToDataLayer(processedData)
             .then(result => {
                 if (result && result.type !== 'error') {
                     response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
@@ -478,7 +478,7 @@ function handleControls(data, response) {
                 else {
                     let err = {
                         type: 'error',
-                        message: 'Could Not Connect To The Data Layer'
+                        message: result.message
                     };
                     writeToDb(err);
                     response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
@@ -486,7 +486,14 @@ function handleControls(data, response) {
                 }
             })
             .catch(err => {
-                console.log("BRRRRR")
+                console.error(err);
+                let error = {
+                    type: 'error',
+                    message: 'Could Not Connect To The Data Layer'
+                };
+                writeToDb(error);
+                response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+                response.end(JSON.stringify(error), 'utf-8');
             });
        
     }
@@ -511,22 +518,32 @@ function handleControls(data, response) {
  */
 function handleError(data, response) {
     if (data) {
-        let result = processError(data);
-        console.log(data.message);
-        // let result = sendToDataLayer(data);
-        if (result) {
-            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(result), 'utf-8');
-        }
-        else {
-            let err = {
+        let processedData = processError(data);
+        sendToDataLayer(processedData).then(result => {
+            if (result) {
+                response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+                response.end(JSON.stringify(result), 'utf-8');
+            }
+            else {
+                let err = {
+                    type: 'error',
+                    message: 'Could Not Connect To The Data Layer'
+                };
+                writeToDb(err);
+                response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+                response.end(JSON.stringify(err), 'utf-8');
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            let error = {
                 type: 'error',
                 message: 'Could Not Connect To The Data Layer'
             };
-            writeToDb(err);
+            writeToDb(error);
             response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(err), 'utf-8');
-        }
+            response.end(JSON.stringify(error), 'utf-8');
+        })
     }
     else {
         let res = {
@@ -550,9 +567,8 @@ function handlePathing(data, response) {
     writeToDb(data);
     if (data) {
         console.log(data);
-        let result = processPathing(data);
+        let processedData = processPathing(data);
         //let result = sendToDataLayer(data);
-        writeToDb(result);
         if (result && result.type !== 'error') {
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(result), 'utf-8')
@@ -598,23 +614,6 @@ function handleOtherRequest(response) {
 function processControls(controls) {
     try {
         writeToDb(controls);
-        //TODO: get rid of dummy data for actual polling from the arduino
-        let status = {
-            type: 'status',
-            imuAccX: 1.0,
-            imuAccY: 0.0,
-            imuAccZ: 1.2,
-            imuYaw: 1.0,
-            imuPitch: 1.0,
-            imuRoll: 0.0,
-            boringRPM: 1.1,
-            extensionRate: 1.0,
-            drillTemp: 100,
-            steeringYaw: 1.0,
-            steeringPitch: 10.0,
-            frontPSI: 90.0,
-            backPSI: 80.0
-        }
         return status;
     }
     catch (err) {
