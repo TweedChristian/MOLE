@@ -22,7 +22,7 @@ let dbClear = false;
 /**CONTROLS
  * type: 'controls'
  * boringSpeed
- * extensionRate
+ * extensionRPM
  * inflateFront
  * inflateBack
  * turningZ
@@ -51,7 +51,7 @@ let dbClear = false;
  * imuPitch,
  * imuRoll,
  * boringRPM,
- * extensionRate,
+ * extensionRPM,
  * drillTemp,
  * steeringYaw,
  * steeringPitch,
@@ -77,7 +77,7 @@ const httpServer = http.createServer(function (request, response) {
     else {
         handleOtherRequest(response);
     }
-})
+});
 
 
 /**Initializes the connection to the python data layer
@@ -88,6 +88,9 @@ function startNetServer() {
         socket = soc;
     });
     if (pythonServer) {
+        if(socket){
+            console.log("REE")
+        }
         console.log('Net Server Started');
     }
     else {
@@ -136,7 +139,7 @@ function initializeDb() {
             imuPitch: [],
             imuRoll: [],
             boringRPM: [],
-            extensionRate: [],
+            extensionRPM: [],
             drillTemp: [],
             steeringYaw: [],
             steeringPitch: [],
@@ -332,7 +335,7 @@ function handleCompile(response) {
         console.error(err);
         let errMsg = {
             type: 'error',
-            message: err
+            message: err.message
         };
         writeToDb(errMsg);
         response.writeHead(500, 'Could Not Generate File', { 'Content-Type': 'text/plain' });
@@ -395,21 +398,35 @@ function handlePathInitialize(dataJSON, response) {
  */
 function handleCorrectPath(dataJSON, response) {
     if (dataJSON) {
-        //let result = sendToDataLayer(dataJSON)
-        let result = processCorrectedPath(dataJSON);
-        if (result && result.type !== 'error') {
-            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(result));
-        }
-        else {
-            let err = {
-                type: 'error',
-                message: 'Could Not Connect to the Data Layer'
-            };
-            writeToDb(err);
-            response.writeHead(500, 'Issue With the Data Layer', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(err));
-        }
+        let processedData = processCorrectedPath(dataJSON);
+        sendToDataLayer(processedData)
+        .then((result) => {
+            socket.removeListener('data', socketHandler);
+            if (result && result.type !== 'error') {
+                response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+                response.end(JSON.stringify(result));
+            }
+            else {
+                let err = {
+                    type: 'error',
+                    message: 'Could Not Connect to the Data Layer'
+                };
+                writeToDb(err);
+                response.writeHead(500, 'Issue With the Data Layer', { 'Content-Type': 'text/plain' });
+                response.end(JSON.stringify(err));
+            }
+        })
+        .catch(
+            (err) => {
+                console.log(err.message);
+                let error = {
+                    type: 'error',
+                    message: 'Could Not Connect to the Data Layer'
+                };
+                response.writeHead(500, 'Issue with the Data Layer', {'Content-Type': 'text/plain'});
+                response.end(JSON.stringify(error));
+            }
+        );
     }
     else {
         let res = {
@@ -470,6 +487,7 @@ function handleControls(data, response) {
         let processedData = processControls(data);
         sendToDataLayer(processedData)
             .then(result => {
+                socket.removeListener('data', socketHandler);
                 if (result && result.type !== 'error') {
                     response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
                     //Result will be a JSON string
@@ -486,7 +504,7 @@ function handleControls(data, response) {
                 }
             })
             .catch(err => {
-                console.error(err);
+                console.error(err.message);
                 let error = {
                     type: 'error',
                     message: 'Could Not Connect To The Data Layer'
@@ -520,6 +538,7 @@ function handleError(data, response) {
     if (data) {
         let processedData = processError(data);
         sendToDataLayer(processedData).then(result => {
+            socket.removeListener('data', socketHandler);
             if (result) {
                 response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
                 response.end(JSON.stringify(result), 'utf-8');
@@ -535,7 +554,7 @@ function handleError(data, response) {
             }
         })
         .catch(err => {
-            console.log(err);
+            console.log(err.message);
             let error = {
                 type: 'error',
                 message: 'Could Not Connect To The Data Layer'
@@ -568,20 +587,34 @@ function handlePathing(data, response) {
     if (data) {
         console.log(data);
         let processedData = processPathing(data);
-        //let result = sendToDataLayer(data);
-        if (result && result.type !== 'error') {
-            response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
-            response.end(JSON.stringify(result), 'utf-8')
-        }
-        else {
-            response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
-            let err = {
-                type: 'error',
-                message: 'Could Not Connect To The Data Layer'
+        sendToDataLayer(processedData).then(
+            (result) => {
+                socket.removeListener('data', socketHandler);
+                if (result && result.type !== 'error') {
+                    response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
+                    response.end(JSON.stringify(result), 'utf-8')
+                }
+                else {
+                    response.writeHead(500, 'Issue with the Data Layer', { 'Content-Type': 'text/plain' });
+                    let err = {
+                        type: 'error',
+                        message: 'Could Not Connect To The Data Layer'
+                    };
+                    writeToDb(err);
+                    response.end(JSON.stringify(err), 'utf-8');
+                }
             }
-            writeToDb(err);
-            response.end(JSON.stringify(err), 'utf-8');
-        }
+
+        ).catch((err) => {
+            console.log(err.message);
+            let error = {
+                type: 'error',
+                message: 'Could Not Connect To The Data Laywer'
+            };
+            writeToDb(error);
+            response.writeHead(500, 'Issue with the Data Layer', {'Content-Type': 'text/plain'});
+            response.end(JSON.stringify(error), 'utf-8');
+        })
     }
     else {
         let res = {
@@ -730,7 +763,7 @@ function processInitializedPath(dataJSON) {
  * DATA LAYER FUNCTIONS
  */
 
-
+let socketHandler;
 
 /**Converts our JSON object to a string and sends it over the net server's socket to 
  * communicate with the python client
@@ -738,28 +771,30 @@ function processInitializedPath(dataJSON) {
  * @returns the response from the python server, or null if we fail the request
  */
 function sendToDataLayer(json) {
+    let dataLayerResponse;
+  
     return new Promise((resolve, reject) => {
-        let dataLayerResponse;
         try {
-            //handleDataLayerResponse(json);
-            socket.write(JSON.stringify(json));
-            socket.on('data', function(data){
+            socketHandler = (data) => {
                 //Data comes in as a buffer
                 dataLayerResponse = JSON.parse(data.toString());
                 handleDataLayerResponse(dataLayerResponse);
                 resolve(dataLayerResponse);
-            });
+            }
+            socket.write(JSON.stringify(json));
+            socket.on('data', socketHandler);
         }
         catch (error) {
             console.log("ERROR OCCURED");
-            console.log(error);
             let err = {
                 type: 'error',
-                message: error
+                message: error.message
             };
             writeToDb(err)
             reject(err); //For error checking above
         }
+       
+            
     });
 }
 
@@ -773,7 +808,6 @@ function handleDataLayerResponse(json) {
     if (json) {
         switch (json.type) {
             case 'status':
-                console.log('status message got')
                 writeToDb(json);
                 return json;
             case 'error':
@@ -836,7 +870,6 @@ function writeToDb(dataJSON) {
 
         //Error messages
         case 'error':
-            console.log(dataJSON.message);
             db.get('errors')
                 .push(dataJSON.message)
                 .write();
@@ -857,20 +890,19 @@ function writeToDb(dataJSON) {
         case 'status':
 
             let currentState = db.get('controlsStatusResponses').value();
-
-            currentState.imuAccX.push(dataJSON.imuAccX);
-            currentState.imuAccY.push(dataJSON.imuAccY);
-            currentState.imuAccZ.push(dataJSON.imuAccZ)
-            currentState.imuPitch.push(dataJSON.imuPitch);
-            currentState.imuRoll.push(dataJSON.imuRoll);
-            currentState.imuYaw.push(dataJSON.imuYaw);
-            currentState.drillTemp.push(dataJSON.drillTemp);
-            currentState.extensionRate.push(dataJSON.extensionRate);
-            currentState.steeringPitch.push(dataJSON.steeringPitch);
-            currentState.steeringYaw.push(dataJSON.steeringYaw);
-            currentState.boringRPM.push(dataJSON.boringRPM);
-            currentState.frontPSI.push(dataJSON.frontPSI);
-            currentState.backPSI.push(dataJSON.backPSI);
+            currentState.imuAccX.push(+dataJSON.imuAccX);
+            currentState.imuAccY.push(+dataJSON.imuAccY);
+            currentState.imuAccZ.push(+dataJSON.imuAccZ)
+            currentState.imuPitch.push(+dataJSON.imuPitch);
+            currentState.imuRoll.push(+dataJSON.imuRoll);
+            currentState.imuYaw.push(+dataJSON.imuYaw);
+            currentState.drillTemp.push(+dataJSON.drillTemp);
+            currentState.extensionRPM.push(+dataJSON.extensionRPM);
+            currentState.steeringPitch.push(+dataJSON.steeringPitch);
+            currentState.steeringYaw.push(+dataJSON.steeringYaw);
+            currentState.boringRPM.push(+dataJSON.boringRPM);
+            currentState.frontPSI.push(+dataJSON.frontPSI);
+            currentState.backPSI.push(+dataJSON.backPSI);
 
             db.set('controlsStatusResponses', currentState).write();
 
@@ -879,12 +911,10 @@ function writeToDb(dataJSON) {
 
         //Received Localization Data
         case 'pathStatus':
-
-            let currentDriftState = db.get('pathStatusResponses');
-
-            currentDriftState.driftX.push(dataJSON.driftX);
-            currentDriftState.driftY.push(dataJSON.driftY);
-            currentDriftState.driftZ.push(dataJSON.driftZ);
+            let currentDriftState = db.get('pathStatusResponses').value();
+            currentDriftState.driftX.push(+dataJSON.driftX);
+            currentDriftState.driftY.push(+dataJSON.driftY);
+            currentDriftState.driftZ.push(+dataJSON.driftZ);
 
             db.set('pathStatusResponses', currentDriftState).write();
 
@@ -1104,13 +1134,13 @@ function selectControlsStatus(specificItem, response) {
                 }
             ));
             break;
-        case 'extensionRate':
+        case 'extensionRPM':
             response.writeHead(200, 'OK', { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify(
                 {
                     type: 'dbRequest',
-                    data: data.extensionRate,
-                    item: 'controlsStatus/extensionRate'
+                    data: data.extensionRPM,
+                    item: 'controlsStatus/extensionRPM'
                 }
             ));
             break;

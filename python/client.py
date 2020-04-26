@@ -139,7 +139,7 @@ def parsePathMessage(message):
     pathMessage += str(distance)
     pathMessage += '!'
     print("sending path message to arduino ", pathMessage)
-    
+    arduino.write(pathMessage.encode('utf-8'))
 '''
 * Sends a special message to the arduino to inidcate it should halt
 '''
@@ -193,6 +193,12 @@ def parseReply(replyString):
             'driftY': splitString[2],
             'driftZ': splitString[3]
         }
+    elif(splitString[0] == 'error'):
+        #THIS IS A PLACEHOLDER FOR NOW
+        replyJSON = {
+            'type': splitString[0],
+            'message': 'resolved'
+        }
     return replyJSON
 
 
@@ -209,6 +215,9 @@ class arduinoStub():
             elif(self.messageInType == 'path'):
                 print("reading path status from arduino stub")
                 return 'pathStatus,1.5,2.5,3.5'
+            elif(self.messageInType == 'error'):
+                print('reading error status from arduino stub')
+                return 'error,received'
         else:
             self.sentReply = False
             return '~\r\n'
@@ -225,7 +234,10 @@ class arduinoStub():
             self.messageInType = 'path'
             pass
         elif(message[0] == '3'):
+            self.messageInType = 'error'
             print("Error Message Recieved")
+            print("TESTING")
+            pass
         else:
             print("Unknown message type sent to arduino")
 
@@ -279,7 +291,7 @@ if __name__ == "__main__":
             parseDesyncMessage(x)
         elif(messageType == 'emergency'):
             emergencyStop()
-        elif(messageType == 'Error'):
+        elif(messageType == 'error'):
             parseErrorMessage(x)
         elif(messageType == 'path'):
             parsePathMessage(x)
