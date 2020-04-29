@@ -14,6 +14,9 @@ let segDist = 4;
 let camPos;
 let camFront;
 let camUp;
+let camYaw = 270;
+let camPitch = 0;
+
 //let segDist = 0.51825575467;
 
 //If we want to log all operations
@@ -82,12 +85,12 @@ function main() {
 
 
 function addAxis(){
-    points.push(vec4(-200.0, 0.0, 10.0, 1.0));
-    points.push(vec4(200.0, 0.0, 10.0, 1.0));
+    points.push(vec4(-200.0, 0.0, 0.0, 1.0));
+    points.push(vec4(200.0, 0.0, 0.0, 1.0));
     colors.push(colorSelection[12]);
     colors.push(colorSelection[12]);
-    points.push(vec4(0.0,-200.0,10.0,1.0));
-    points.push(vec4(0.0,200.0,10.0,1.0));
+    points.push(vec4(0.0,-200.0,0.0,1.0));
+    points.push(vec4(0.0,200.0,0.0,1.0));
     colors.push(colorSelection[12]);
     colors.push(colorSelection[12]);
 }
@@ -722,22 +725,43 @@ function initalizeCameraControls() {
  * @param event is the keydown event
  */
 function moveCamera(event) {
-    let cameraSpeed = 1;
+    let cameraSpeed = 0.5;
+    let cameraTurnSpeed = 1;
+    let camRight = normalize(cross(camFront, camUp));
     if(event.ctrlKey && event.key === ' '){
         //DOWN
         console.log("DOWN ALT THING")
+        camPos = [
+            camPos[0] - (camUp[0] * cameraSpeed),
+            camPos[1] - (camUp[1] * cameraSpeed),
+            camPos[2] - (camUp[2] * cameraSpeed)
+        ];
     }
     else if(event.key === ' ') {
         //UP
         console.log('Space Key');
+        camPos = [
+            camPos[0] + (camUp[0] * cameraSpeed),
+            camPos[1] + (camUp[1] * cameraSpeed),
+            camPos[2] + (camUp[2] * cameraSpeed)
+        ];
     }
     else if(event.key === 'a') {
         //Strafe Left
-        console.log('A Key');
+        camPos = [
+            camPos[0] - (camRight[0] * cameraSpeed),
+            camPos[1] - (camRight[1] * cameraSpeed),
+            camPos[2] - (camRight[2] * cameraSpeed)
+        ];
     }
     else if(event.key === 'd') {
         //Strafe Right
         console.log('D Key');
+        camPos = [
+            camPos[0] + (camRight[0] * cameraSpeed),
+            camPos[1] + (camRight[1] * cameraSpeed),
+            camPos[2] + (camRight[2] * cameraSpeed)
+        ];
     }
     else if(event.key === 'w') {
         //Forwards
@@ -761,21 +785,42 @@ function moveCamera(event) {
     else if(event.keyCode === 38) {
         //Pitch Up
         console.log('Up Key');
+        camPitch += cameraTurnSpeed;
     }
     else if(event.keyCode === 40) {
         //Pitch Down
         console.log('Down Key');
+        camPitch -= cameraTurnSpeed;
     }
     else if(event.keyCode === 37) {
         //Yaw Left
         console.log('Left Key');
+        camYaw -= cameraTurnSpeed;
     }
     else if(event.keyCode === 39) {
         //Yaw Right
         console.log('Right Key');
+        camYaw += cameraTurnSpeed;
     }
     else {
     }
+
+    if(camYaw > 360){
+        camYaw = 0;
+    }
+    if(camYaw < 0){
+        camYaw = 360;
+    }
+    if(camPitch > 89){
+        camPitch = 89;
+    }
+    if(camPitch < -89){
+        camPitch = -89;
+    }
+
+    camFront[0] = Math.cos(degToRad(camYaw)) * (Math.cos(degToRad(camPitch)));
+    camFront[1] = Math.sin(degToRad(camPitch));
+    camFront[2] = Math.sin(degToRad(camYaw)) * (Math.cos(degToRad(camPitch)));
     updateViewMat();
     draw();
 }

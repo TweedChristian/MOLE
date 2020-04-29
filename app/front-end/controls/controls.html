@@ -47,11 +47,11 @@
                             0
                         </label>
                         <div class='c_controlsBlock__sliderContainer'>
-                            <input class='c_controlsBlock__slider' type='range' step='0.5' min='0' max='20' value='10'
+                            <input class='c_controlsBlock__slider' type='range' step='1' min='0' max='100' value='10'
                                 id='boring' onchange="boringLabel.innerHTML = 'Boring Speed: ' + value;">
                         </div>
                         <label class='c_controlsBlock__labelRight'>
-                            20
+                            100
                         </label>
                     </div>
                     <br>
@@ -60,14 +60,14 @@
                     </label>
                     <div class="c_controlsBlock__sliderLabels">
                         <label class='c_controlsBlock__labelLeft'>
-                            0
+                            -100
                         </label>
                         <div class='c_controlsBlock__sliderContainer'>
-                            <input class='c_controlsBlock__slider' type='range' id='extension' step='0.5' min='0'
-                                max='20' value='10' onchange="extLabel.innerHTML = 'Extension: ' + value">
+                            <input class='c_controlsBlock__slider' type='range' id='extension' step='1' min='-100'
+                                max='100' value='10' onchange="extLabel.innerHTML = 'Extension: ' + value">
                         </div>
                         <label class='c_controlsBlock__labelRight'>
-                            20
+                            100
                         </label>
                     </div>
                     <br>

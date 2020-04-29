@@ -793,8 +793,6 @@ function sendToDataLayer(json) {
             writeToDb(err)
             reject(err); //For error checking above
         }
-       
-            
     });
 }
 
@@ -903,7 +901,6 @@ function writeToDb(dataJSON) {
             currentState.boringRPM.push(+dataJSON.boringRPM);
             currentState.frontPSI.push(+dataJSON.frontPSI);
             currentState.backPSI.push(+dataJSON.backPSI);
-
             db.set('controlsStatusResponses', currentState).write();
 
             updateDbTime();
