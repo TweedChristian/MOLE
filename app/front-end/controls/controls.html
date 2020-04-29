@@ -7,18 +7,31 @@
     <script src="controls/controls.js"></script>
     <link rel="icon" href="/assets/images/icons8-cat-96.png" type="img/png">
     <link rel='stylesheet' type='text/css' href='controls/style.css'>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body onload=main()>
     <header class='navHeader'>
-        <a class='navHeader__link' href='/'><h1>MOLE</h1></a>
+        <a class='navHeader__link' href='/'>
+            <h1>MOLE</h1>
+        </a>
         <nav class='navHeader__links'>
-            <a class='navHeader__link' href='/controls'><h2>Controls</h2></a>
-            <a class='navHeader__link' href='/datavis'><h2>Data Vis</h2></a>
-            <a class='navHeader__link' href='/pathing'><h2>Pathing</h2></a>
-            <a class='navHeader__link' href='/about'><h2>About</h2></a>
-            <a class='navHeader__link' href='/compile'><h2>Compile</h2></a>
+            <a class='navHeader__link' href='/controls'>
+                <h2>Controls</h2>
+            </a>
+            <a class='navHeader__link' href='/datavis'>
+                <h2>Data Vis</h2>
+            </a>
+            <a class='navHeader__link' href='/pathing'>
+                <h2>Pathing</h2>
+            </a>
+            <a class='navHeader__link' href='/about'>
+                <h2>About</h2>
+            </a>
+            <a class='navHeader__link' href='/compile'>
+                <h2>Compile</h2>
+            </a>
         </nav>
     </header>
     <div class="c_pageContainer">
@@ -28,67 +41,68 @@
                 <div class="c_controlsBlock__slidersContainer">
                     <label class='c_controlsBlock__label' id='boringLabel'>
                         Boring Speed: 10
-                    </label
-                    ><br>
-                    <label class='c_controlsBlock__label'>
-                        0
                     </label>
-                    <div class='c_controlsBlock__sliderContainer'>
-                        <input class='c_controlsBlock__slider' 
-                        type='range' step='0.5' min='0' max='20' value='10' id='boring'
-                        onchange="boringLabel.innerHTML = 'Boring Speed: ' + value;">
+                    <div class="c_controlsBlock__sliderLabels">
+                        <label class='c_controlsBlock__labelLeft'>
+                            0
+                        </label>
+                        <div class='c_controlsBlock__sliderContainer'>
+                            <input class='c_controlsBlock__slider' type='range' step='0.5' min='0' max='20' value='10'
+                                id='boring' onchange="boringLabel.innerHTML = 'Boring Speed: ' + value;">
+                        </div>
+                        <label class='c_controlsBlock__labelRight'>
+                            20
+                        </label>
                     </div>
-                    <label class='c_controlsBlock__label'>
-                        20
-                    </label>
                     <br>
                     <label id="extLabel" class='c_controlsBlock__label'>
                         Extension: 10
                     </label>
-                    <br>
-                    <label class='c_controlsBlock__label'>
-                        0
-                    </label>
-                    <div class='c_controlsBlock__sliderContainer'>
-                        <input class='c_controlsBlock__slider' 
-                        type='range' id='extension' step='0.5' min='0' max='20' value='10'
-                        onchange="extLabel.innerHTML = 'Extension: ' + value">
+                    <div class="c_controlsBlock__sliderLabels">
+                        <label class='c_controlsBlock__labelLeft'>
+                            0
+                        </label>
+                        <div class='c_controlsBlock__sliderContainer'>
+                            <input class='c_controlsBlock__slider' type='range' id='extension' step='0.5' min='0'
+                                max='20' value='10' onchange="extLabel.innerHTML = 'Extension: ' + value">
+                        </div>
+                        <label class='c_controlsBlock__labelRight'>
+                            20
+                        </label>
                     </div>
-                    <label class='c_controlsBlock__label'>
-                        20
-                    </label>
                     <br>
                     <label id="txLabel" class='c_controlsBlock__label'>
                         Turning X: 0
-                    </label><br>
-                    <label class='c_controlsBlock__label'>
-                        0
                     </label>
-                    <div class='c_controlsBlock__sliderContainer'>
-                        <input class='c_controlsBlock__slider'
-                        type='range' min='0' step='0.01' max='1' value='0.0' id='turnx'
-                        onchange="txLabel.innerHTML = 'Turning X: ' + value">
-                    </div>
-                    <label class='c_controlsBlock__label'>
+                    <div class="c_controlsBlock__sliderLabels">
+                        <label class='c_controlsBlock__labelLeft'>
+                            0
+                        </label>
+                        <div class='c_controlsBlock__sliderContainer'>
+                            <input class='c_controlsBlock__slider' type='range' min='0' step='0.01' max='1' value='0.0'
+                                id='turnx' onchange="txLabel.innerHTML = 'Turning X: ' + value">
+                        </div>
+                        <label class='c_controlsBlock__labelRight'>
                             1
-                    </label>
+                        </label>
+                    </div>
+
                     <br>
                     <label id="tzLabel" class='c_controlsBlock__label'>
                         Turning Z: 0
                     </label>
-                    <br>
-                    <label class='c_controlsBlock__label'>
-                        0
-                    </label>
-                    <div class='c_controlsBlock__sliderContainer'>
-                        <input class='c_controlsBlock__slider' 
-                        type='range' min='0' step='0.01' max='1' value='0.0' id='turnz'
-                        onchange="tzLabel.innerHTML = 'Turning Z: '+ value">
+                    <div class="c_controlsBlock__sliderLabels">
+                        <label class='c_controlsBlock__labelLeft'>
+                            0
+                        </label>
+                        <div class='c_controlsBlock__sliderContainer'>
+                            <input class='c_controlsBlock__slider' type='range' min='0' step='0.01' max='1' value='0.0'
+                                id='turnz' onchange="tzLabel.innerHTML = 'Turning Z: '+ value">
+                        </div>
+                        <label class='c_controlsBlock__labelRight'>
+                            1
+                        </label>
                     </div>
-                    <label class='c_controlsBlock__label'>
-                        1
-                    </label>
-                    <br>
                 </div>
                 <div class="c_controlsBlock__buttonsContainer">
                     <button class="c_controlsBlock__button" onclick='inflate(0)'>
@@ -105,7 +119,7 @@
                     <div class="c_controlsBlock__stop">
                         <button class="c_controlsBlock__stopButton" onclick='emergency()'>
                             <span class="c_controlsBlock__stopText">
-                                Emergency
+                                Stop
                             </span>
                         </button>
                     </div>

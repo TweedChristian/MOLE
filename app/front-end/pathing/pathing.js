@@ -10,12 +10,17 @@ let obstaclePoints = [];
 let colorSelection;
 
 let segDist = 4;
+
+let camPos;
+let camFront;
+let camUp;
 //let segDist = 0.51825575467;
 
 //If we want to log all operations
 let testMode = true;
 
 function main() {
+    initalizeCameraControls();
     let canvas = document.getElementById("Canvas");
     gl = WebGLUtils.setupWebGL(canvas, undefined);
     program = initShaders(gl, "vshader", "fshader");
@@ -31,10 +36,12 @@ function main() {
 
     let at = vec3(0.0, 0.0, 0.0);
     let eyePos = vec3(0.0, 0.0, 50.0);
-    let up = vec3(0.0, 1.0, 0.0);
 
-    let viewMat = lookAt(eyePos, at, up);
-    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'viewMatrix'), false, flatten(viewMat));
+    camPos = vec3(0.0,0.0,50.0);
+    camUp = vec3(0.0,1.0,0.0);
+    camFront = vec3(0.0,0.0,-1.0);
+
+    updateViewMat();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -75,12 +82,12 @@ function main() {
 
 
 function addAxis(){
-    points.push(vec4(-200.0, 0.0, 0.0, 1.0));
-    points.push(vec4(200.0, 0.0, 0.0, 1.0));
+    points.push(vec4(-200.0, 0.0, 10.0, 1.0));
+    points.push(vec4(200.0, 0.0, 10.0, 1.0));
     colors.push(colorSelection[12]);
     colors.push(colorSelection[12]);
-    points.push(vec4(0.0,-200.0,0.0,1.0));
-    points.push(vec4(0.0,200.0,0.0,1.0));
+    points.push(vec4(0.0,-200.0,10.0,1.0));
+    points.push(vec4(0.0,200.0,10.0,1.0));
     colors.push(colorSelection[12]);
     colors.push(colorSelection[12]);
 }
@@ -695,4 +702,92 @@ function addObstacle() {
     //Right Face
 
     //Left Face
+}
+
+
+/** CAMERA FUNCTIONS **/
+
+
+/**
+ * Simply adds a listener for key inputs to the window
+ */
+function initalizeCameraControls() {
+    document.addEventListener('keydown', (event) => {
+        moveCamera(event);
+    });
+}
+
+/**Parses through all the key events to properly 
+ * transform the camera
+ * @param event is the keydown event
+ */
+function moveCamera(event) {
+    let cameraSpeed = 1;
+    if(event.ctrlKey && event.key === ' '){
+        //DOWN
+        console.log("DOWN ALT THING")
+    }
+    else if(event.key === ' ') {
+        //UP
+        console.log('Space Key');
+    }
+    else if(event.key === 'a') {
+        //Strafe Left
+        console.log('A Key');
+    }
+    else if(event.key === 'd') {
+        //Strafe Right
+        console.log('D Key');
+    }
+    else if(event.key === 'w') {
+        //Forwards
+        console.log('W Key');
+        camPos = [
+            camPos[0] + (camFront[0] * cameraSpeed), 
+            camPos[1] + (camFront[1] * cameraSpeed), 
+            camPos[2] + (camFront[2] * cameraSpeed)
+        ];
+    }
+    else if(event.key === 's') {
+        //Backwards
+        console.log('S Key');
+        camPos = [
+            camPos[0] - (camFront[0] * cameraSpeed), 
+            camPos[1] - (camFront[1] * cameraSpeed), 
+            camPos[2] - (camFront[2] * cameraSpeed)
+        ];
+
+    }
+    else if(event.keyCode === 38) {
+        //Pitch Up
+        console.log('Up Key');
+    }
+    else if(event.keyCode === 40) {
+        //Pitch Down
+        console.log('Down Key');
+    }
+    else if(event.keyCode === 37) {
+        //Yaw Left
+        console.log('Left Key');
+    }
+    else if(event.keyCode === 39) {
+        //Yaw Right
+        console.log('Right Key');
+    }
+    else {
+    }
+    updateViewMat();
+    draw();
+}
+
+
+/**
+ * Takes the global camera position, camera direction, and camera up vector
+ * and generates a new view matrix, and then plugs it into the graphics pipeline
+ */
+function updateViewMat(){
+    console.log(camFront)
+    console.log(camPos);
+    let viewMat = lookAt(camPos, add(camFront, camPos), camUp);
+    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'viewMatrix'), false, flatten(viewMat));
 }

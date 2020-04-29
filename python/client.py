@@ -236,7 +236,6 @@ class arduinoStub():
         elif(message[0] == '3'):
             self.messageInType = 'error'
             print("Error Message Recieved")
-            print("TESTING")
             pass
         else:
             print("Unknown message type sent to arduino")
@@ -252,7 +251,6 @@ if __name__ == "__main__":
     serialPort = sys.argv[1]
     port = 7086
     if(serialPort == "test"):
-        print('test init')
         arduino = arduinoStub()
     else:
         try:

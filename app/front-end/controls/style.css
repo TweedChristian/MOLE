@@ -26,7 +26,7 @@ html {
 /* f9b9f2 - electric lavender */
 /* e2efde - platinum */
 /* 9f9aa4 - manatee */
-
+/* 606465 - dark grey */
 
 /* Nav Bar */
 .navHeader {
@@ -86,7 +86,7 @@ html {
     /* height: calc(100vh - 48px); */
     padding: 32px;
     box-sizing: border-box;
-    width: max-content;
+    width: 100%;
     gap: 32px;
     background-color: #9e8fb2;
     margin: auto;
@@ -97,13 +97,13 @@ html {
 .c_controlsBlock__title {
     text-align: start;
     color: white;
-    margin: 1rem;
+    margin: 1rem 0rem;
 }
 
 /* Input Styling */
 .c_controlsBlock__button {
     font-family: inherit;
-    background-color: #9f9aa4 ;
+    background-color: #606465;
     border-radius: 3px;
     padding: 1rem;
     margin: 1rem;
@@ -125,7 +125,8 @@ html {
     height: 100%;
     align-items: center;
     grid-template-rows: auto auto auto;
-    gap: 1rem
+    gap: 1rem;
+    width: 100%;
 }
 
 .c_controlsBlock__buttonText {
@@ -146,9 +147,9 @@ html {
 }
 
 .c_controlsBlock__stopText {
-    font-size: 2rem;
     color: white;
     font-weight: bold;
+    font-size: 1.5rem;
 }
 
 /* Controls Sliders */
@@ -157,8 +158,26 @@ html {
     color: white;
 }
 
-.c_controlsBlock__sliderContainer {
+.c_controlsBlock__labelLeft {
+    color: white;
+    margin-right: 0.5rem;
+}
+
+.c_controlsBlock__labelRight {
+    color: white;
+    margin-left: 0.5rem;
+}
+
+.c_controlsBlock__slidersContainer {
     width: 100%;
+}
+
+.c_controlsBlock__sliderLabels {
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    margin-top: 0.5rem;
 }
 
 .c_controlsBlock__slider {
@@ -193,6 +212,9 @@ html {
     background-color: #f9b9f2;
 }
 
+.c_controlsBlock__sliderContainer{
+    display: grid
+}
 /* Command Log Styling */
 
 #logBox {
