@@ -255,7 +255,8 @@ if __name__ == "__main__":
     else:
         try:
             arduino = serial.Serial(serialPort, timeout = 1, baudrate = 9600)
-        except:
+        except Exception as e:
+            print(e)
             print("Could not establish serial connection to port " + serialPort)
             exit()
     try:
