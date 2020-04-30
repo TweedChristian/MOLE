@@ -10,31 +10,31 @@ _Write (done) next to completed tasks_
 5. Build collision detection using Plucker coordinates
 6. Translate and rotate curves to correct position
 7. Build a main function to control the logic
-8. Build the module
-9. Camera Controls
+8. Build the module (not doing)
+9. Camera Controls (done)
 10. Write up formula sheet
 11. Log mode
 
 ## Node: 
-1. Add in stubs 
+1. Add in stubs (done)
 2. Seperate things into concrete functions (done)
 3. Documentation (done)
 4. Define API behavior functions (done)
 
 ## Controls:
 1. Style (DONE)
-2. Move Labels
+2. Move Labels (done)
 
 ## Python: 
-1. Add in Bayes curve algorithm
-2. Define stub behavior
+1. Add in Bayes curve algorithm (not going to be done)
+2. Define stub behavior (done)
 3. ??? (Tom add stuff in here)
 
 ## Serial: 
-1. Define stub behavior
-2. Documentation
-3. Seperate multiple out sensors from command process
+1. Define stub behavior (done)
+2. Documentation (done)
+3. Seperate multiple out sensors from command process (done)
 4. ??? (Tom add stuff in here)
 
 ## D3Vis
-1. Make calls to the server to load data 
+1. Make calls to the server to load data (done)
