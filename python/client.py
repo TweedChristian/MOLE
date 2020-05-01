@@ -97,9 +97,17 @@ def parseCommandMessageStr(message):
     sMesg += ','
     sMesg += str(extensionRate)
     sMesg += ','
-    sMesg += str(inflateFront)
+    # sMesg += str(inflateFront)
+    if(inflateFront):
+        sMesg += '1'
+    else:
+        sMesg += '0'
     sMesg += ','
-    sMesg += str(inflateBack)
+    # sMesg += str(inflateBack)
+    if(inflateBack):
+        sMesg += '1'
+    else:
+        sMesg += '0'
     sMesg += ','
     sMesg += str(turningX)
     sMesg += ','

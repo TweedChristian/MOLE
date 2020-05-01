@@ -1,7 +1,7 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <Honeywell_pressure_sensors.h>
+//#include <Honeywell_pressure_sensors.h>
 
 #include <PID_v1.h>
 
@@ -38,9 +38,9 @@ float boringMotorTemp = 0;
 
 //Comm stuff
 float data;
-boolean newData = false;
-String message[6];
-boolean messageEnd = false;
+volatile boolean newData = false;
+volatile double message[7];
+volatile boolean messageEnd = false;
 String inFrag;
 String messageFrag;
 char inByte;
@@ -71,9 +71,13 @@ int previousMillis = 0;
 
 int boringTachPin = 20;
 int extensionTachPin = 21;
-
+/*
 int yawPot = A8;
 int pitchPot = A9;
+*/
+int yawPot = A2;
+int pitchPot = A3;
+
 
 int fullExtendSwitch = 39;
 int fullCompressSwitch = 38;
@@ -145,22 +149,22 @@ imu.begin();//begin talking to imu
 
 //Motor Setup
  pinMode(motor1_ENA, OUTPUT);  // sets the pin as output
- analogWriteFrequency(motor1_ENA, 10000);//max frequency for motor controller
+// analogWriteFrequency(motor1_ENA, 10000);//max frequency for motor controller
   pinMode(motor1_IN1, OUTPUT);  // sets the pin as output
   pinMode(motor1_IN2, OUTPUT);  // sets the pin as output
   
   pinMode(motor2_ENA, OUTPUT);  // sets the pin as output
-  analogWriteFrequency(motor2_ENA, 10000);////max frequency for motor controller
+//  analogWriteFrequency(motor2_ENA, 10000);////max frequency for motor controller
   pinMode(motor2_IN1, OUTPUT);  // sets the pin as output
   pinMode(motor2_IN2, OUTPUT);  // sets the pin as output
   
  pinMode(extMotor_ENA, OUTPUT);  // sets the pin as output
- analogWriteFrequency(extMotor_ENA, 10000);//max frequency for motor controller
+// analogWriteFrequency(extMotor_ENA, 10000);//max frequency for motor controller
   pinMode(extMotor_IN1, OUTPUT);  // sets the pin as output
   pinMode(extMotor_IN2, OUTPUT);  // sets the pin as output
  
   pinMode(boringMotor_PWM, OUTPUT);  // sets the pin as output
-  analogWriteFrequency(boringMotor_PWM, 15000);//max frequency for SPX
+//  analogWriteFrequency(boringMotor_PWM, 15000);//max frequency for SPX
   boringMotor.attach(boringMotor_PWM);   // Attach signal to pin
 
   steeringMotor1.enablePin = motor1_ENA;
@@ -248,24 +252,38 @@ void loop() {
 //if((millis() - previousMillis) > loopInterval){
   //previousMillis = millis();//for next loop
   if(Serial.available()){
-    while(!messageEnd){
+    delay(250);
+    Serial.println("first call in loop, message end is " + String(messageEnd));
+    while(messageEnd == 0){
+      Serial.println("calling parse message, new data is "+ String(newData));
       parseMessage();
       if(newData == true){
         newData = false;
-        message[messageIndex] = messageFrag;
+        message[messageIndex] = atof(messageFrag.c_str());
+        Serial.print("message frag ");
+        Serial.println(messageFrag);
+        Serial.print("message [i] " + messageIndex);
+        Serial.println(message[messageIndex]);
         messageIndex ++;
        messageFrag = "";
       }
     }
+    Serial.println("Broke while loop");
+    for(int asdf = 0; asdf < 7; asdf++){
+      Serial.println("Message [asdf] " + String(message[asdf]));
+    }
+  
     messageEnd = false;
     messageIndex = 0;
-    if(message[0] == "0"){
+    Serial.println("message end is" + String(messageEnd));
+    if(message[0] == 0){
       parseCommandMessage();
     }
-    else if(message[0] == "3"){
+    else if(message[0] == 3){
       parseErrorMessage();
     }
   }
+  
   
 
 //get steering postions
@@ -362,12 +380,12 @@ int extensionMotorLimitCheck(int motorDirection){
   
   if((!digitalRead(fullExtendSwitch)) && motorDirection){//if we are extended and want to extend
       allowedMovement = 0;
-     Serial.println("Already extended");
+     //Serial.println("Already extended");
   }
 
    if((!digitalRead(fullCompressSwitch)) && !motorDirection){//if we are compressed and want to compress
       allowedMovement = 0;
-      Serial.println("Already compressed");
+      //Serial.println("Already compressed");
   }
 
   return allowedMovement;
@@ -626,9 +644,10 @@ for (int value = 0; value <= 500; value++) {
 //comm helpers
 
 void parseMessage(){
-  while(Serial.available() > 0 && newData == false){
+  while(newData == 0){
     inByte = Serial.read();
     if(inByte == '!'){
+      Serial.println("settign message end");
       messageEnd = true;
       newData = true;
     }
@@ -642,16 +661,15 @@ void parseMessage(){
 }
 
 void parseCommandMessage(){
-  setBoringSpeed(atoi(message[1].c_str()));
-  setExtensionRate(atoi(message[2].c_str()));
-  if(message[3] == "true"){
+  setExtensionRate(message[2]);
+  if(message[3] == 1){
     inflate('f');
   }
-  if(message[4] == "true"){
+  if(message[4] == 1){
     inflate('b');
   }
-  setTurningX(atof(message[5].c_str()));
-  setTurningZ(atof(message[6].c_str()));
+  setTurningX(message[5]);
+  setTurningZ(message[6]);
   sendStatus();
 }
 
@@ -663,8 +681,8 @@ void parseErrorMessage(){
 }
 
 void setBoringSpeed(int spd){
-  //Serial.print("set boring speed to: ");
-  //Serial.println(spd);
+  Serial.print("set boring speed to: ");
+  Serial.println(spd);
   blinkLED(spd);
 
   boringSetpoint = spd;
