@@ -4,7 +4,6 @@ import socket
 import serial
 import sys
 import json
-import numpy as np
 import time
 
 
@@ -98,9 +97,17 @@ def parseCommandMessageStr(message):
     sMesg += ','
     sMesg += str(extensionRate)
     sMesg += ','
-    sMesg += str(inflateFront)
+    # sMesg += str(inflateFront)
+    if(inflateFront):
+        sMesg += '1'
+    else:
+        sMesg += '0'
     sMesg += ','
-    sMesg += str(inflateBack)
+    # sMesg += str(inflateBack)
+    if(inflateBack):
+        sMesg += '1'
+    else:
+        sMesg += '0'
     sMesg += ','
     sMesg += str(turningX)
     sMesg += ','
@@ -167,6 +174,7 @@ def sendUpstream(message, socket):
 * Stub for now with dummy data, sue me
 '''
 def parseReply(replyString):
+    print("Parsing Reply From Arduino")
     splitString = replyString.split(',')
     print(splitString)
     if(splitString[0] == 'status'):
@@ -198,6 +206,11 @@ def parseReply(replyString):
         replyJSON = {
             'type': splitString[0],
             'message': 'resolved'
+        }
+    else:
+        replyJSON = {
+            'type': 'error',
+            'message' : 'Experienced error with embedded system'
         }
     return replyJSON
 
@@ -266,13 +279,15 @@ if __name__ == "__main__":
         print("Could not establish socket connection to server")
         exit()
     while 1:
+        arduino.reset_input_buffer()
+        arduino.reset_output_buffer()
         try:
             data = s.recv(1024)
         except:
             print('Socket connection closed by server')
             exit()
         print('Received') 
-        print(data)
+        # print(data)
         try:
             x = json.loads(data)
         except:
@@ -296,14 +311,17 @@ if __name__ == "__main__":
             parsePathMessage(x)
         else:
             print("Malformed message of type " + messageType + " recieved")
+        time.sleep(1)
         while(1):
             reply = arduino.readline()
+            # print(reply)
             if(len(reply) != 0):
-                if(reply == "~\r\n"):
+                if(reply[-3:] == "~\r\n"):
                     print("Parsed Arduino reply")
+                    replyJSON = parseReply(reply)
                     break
-                print("Arduino says: " + reply)
-                replyJSON = parseReply(reply)
+                else:
+                    print("Arduino says: " + reply)
         print(json.dumps(replyJSON))
         if(sendUpstream(json.dumps(replyJSON),s)):
             print("sent status")
