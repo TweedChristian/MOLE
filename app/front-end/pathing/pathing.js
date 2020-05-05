@@ -12,21 +12,41 @@ let obstacleColors = [];
 
 //Stores x,y,z,s
 let obstacles = [];
+let curves = [];
 
 let points = [];
 let colors = [];
 
-
-let colorSelection;
+const colorSelection = {
+    KHAKI: [0.941, 0.902, 0.549, 1.0],
+    SIENNA: [0.627, 0.322, 0.176, 1.0],
+    OLIVE: [0.502, 0.502, 0.0, 1.0],
+    PURPLE: [0.502, 0.0, 0.502, 1.0],
+    SILVER: [0.753, 0.753, 0.753, 1.0],
+    MAROON: [0.502, 0.0, 0.0, 1.0],
+    TEAL: [0.0, 0.502, 0.502, 1.0],
+    GREEN: [0.0, 0.502, 0.0, 1.0],
+    CORAL: [0.941, 0.502, 0.502, 1.0],
+    ROSY: [0.737, 0.561, 0.561, 1.0],
+    WHITE: [1.0, 1.0, 1.0, 1.0],
+    SLATE: [0.439, 0.502, 0.565, 1.0],
+    VIORED: [0.78, 0.082, 0.522, 1.0],
+    CORNFLOWER_BLUE: [0.45882, 0.54510, 0.99216, 1.0],
+    MEDIUM_PURPLE: [0.53725, 0.50196, 0.96078, 1.0],
+    OBJECT_TRANSLUSCENT: [0.5, 0.23, 0.01, 0.05],
+    LINE_TRANSLUSCENT: [0.45882, 0.54510, 0.99216, 0.1]
+}
 
 let segDist = 4;
 
 let camPos;
 let camFront;
 let camUp;
-let camYaw = 270;
-let camPitch = 0;
+let camYaw = 112;
+let camPitch = -10;
 
+const minExtensionDistance = 2;
+const demoTheta = 10;
 //let segDist = 0.51825575467;
 
 //If we want to log all operations
@@ -36,20 +56,465 @@ function main() {
     initalizeCameraControls();
     webGLInit();
 
-    addAxis();
-    // addObstacle(3, 1, -4, 1);
-    // curveAroundObstacle(0);
-    addObstacle(-6, 6, 6, 1);
-    addObstacle(6, 6, -6, 1);
-    // collisionDetection([0,0,0], [-3,3,3], [1,2,3], [-2,3,4],[-2,-3,5]);
-    // collisionDetection([0,0,0], [-1,1,6], [1,2,3], [-2,3,4],[-2,-3,5]);
-    pathPoints.push(vec4(-6, -6, -6, 1.0));
-    pathPoints.push(vec4(6, 6, 6, 1.0));
-    pathColors.push(colorSelection[2]);
-    pathColors.push(colorSelection[2]);
-    detectCollisionInObstacle(vec4(-6, -6, -6, 1.0), vec4(6, 6, 6, 1.0));
+    addAxis(true, false, true);
+
+    demo();
     render();
     draw();
+}
+
+function demo(){
+    addObstacle(0, 4, 0, 4);
+    curves.push(constructCurve(10, 3, 18, 17.2, 23.2, 0));
+    drawCurve(0, colorSelection.LINE_TRANSLUSCENT);
+
+    let dist = idealDistance(7.218, 10);
+
+
+    curve2 = curveFromYawPitch(dist, 10, 0, [7.218, 6, 0], [0, 0, 1], 18);
+    //Odd case: No delta pitch and [0,1,0] is direction
+    curves.push(curve2);
+    //drawCurve(1, colorSelection.PURPLE);
+
+    curve3 = curveFromYawPitch(dist, -10, 0, [7.218, 6, 0], [0, 0, -1], 18);
+    curves.push(curve3);
+    // drawCurve(2, colorSelection.SIENNA);
+
+    curve4 = curveFromYawPitch(dist, 0, -10, [7.218, 6, 0], [0, -1, 0], 18);
+    curves.push(curve4);
+    //drawCurve(3, colorSelection.MAROON);
+
+    curve5 = curveFromYawPitch(dist, 0, 10, [7.218, 6, 0], [0, 1, 0], 18);
+    curves.push(curve5);
+    // drawCurve(4, colorSelection.CORAL);
+
+    curve6 = curveFromYawPitch(3, 0, 10, [5, 5, 5], [0, 1, 0], 18);
+    curves.push(rotateEntireCurve(0, curve6));
+   // drawCurve(5, colorSelection.KHAKI);
+    curves.push(curve6);
+   // drawCurve(6, colorSelection.MEDIUM_PURPLE);
+    curveCorrect(0);
+}
+
+function splineEntireCurve(curve) {
+    let splinePoints = []
+    for (let i = 0; i < curve.length - 3; i++) {
+        splinePoints.push(...catMullRomSpline(curve[i], curve[i + 1], curve[i + 2], curve[i + 3], 0.5));
+    }
+    return splinePoints;
+}
+
+function curveCorrect(curveIndex) {
+    let curve = curves[curveIndex];
+    let successfulCurve;
+    let obstacleCollisionResults = checkCurve(curve);
+    if (obstacleCollisionResults[0].length === 0) {
+        //No collision do nothing
+        return;
+    }
+    let obstacleIndex = obstacleCollisionResults[1];
+
+    let faultPoints = obstacleCollisionResults[0];
+    radius = 0.5 * distance3d(curve[faultPoints[0]], curve[faultPoints[1] + 1]);
+
+    if (radius < obstacles[obstacleIndex][3]) {
+        //Radius is smaller than the object don't do anything or too small to matter
+    }
+    else {
+        let dist;
+        let curvePivotStart = faultPoints[0];
+        let curvePivotEnd = faultPoints[1];
+        let found = false;
+        let noPossibility = false;
+        while (!found && !noPossibility) {
+            radius = 0.5 * distance3d(curve[curvePivotStart], curve[curvePivotEnd]);
+            dist = idealDistance(radius, 10);
+            if (dist > minExtensionDistance) {
+                let centerCurve = constructCurve(10, dist, 18, curve[curvePivotStart][0], curve[curvePivotStart][1], curve[curvePivotStart][2]);
+                // let leftCurve = rotateEntireCurve(0, centerCurve);
+                // let rightCurve = rotateEntireCurve(-0, centerCurve);
+
+                // curves.push(centerCurve);
+                // drawCurve(curves.length - 1, colorSelection.MAROON);
+                // curves.push(leftCurve);
+                // drawCurve(curves.length - 1, colorSelection.OLIVE);
+                // curves.push(rightCurve);
+                // drawCurve(curves.length - 1, colorSelection.SIENNA);
+
+                let leftFound;
+                let rightFound;
+                for (let i = 0; i < curvePivotStart; i++) {
+                    if(!leftFound){
+                        for(let j = 0; j < Math.ceil(centerCurve.length / 2); j++){
+                            let outerCurveIndex = curvePivotStart - i;
+                            let [yaw1, pitch1] = findChangeInYawPitch(curve[outerCurveIndex - 1], curve[outerCurveIndex], centerCurve[j]);
+                            let [yaw2, pitch2] = findChangeInYawPitch(curve[i], centerCurve[j], centerCurve[j + 1]);
+                            if(Math.abs(yaw1) <= 10 && Math.abs(pitch1) <= 10 && !leftFound){
+                                if(Math.abs(yaw2) <= 10 && Math.abs(pitch2) <= 10 && !leftFound){
+                                    leftFound = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for(let i=curvePivotEnd; i < curve.length - 1; i++){
+                    if(!rightFound){
+                        for(let j=centerCurve.length - 1; j > Math.ceil(centerCurve.length / 2); j--){
+                            let [yaw1, pitch1] = findChangeInYawPitch(centerCurve[j], curve[i], curve[i+1]);
+                            let [yaw2, pitch2] = findChangeInYawPitch(curve[i], centerCurve[j], centerCurve[j-1]   );
+                            if(Math.abs(yaw1) <= 10 && Math.abs(pitch1) <= 10 && !rightFound){
+                                if(Math.abs(yaw2) <= 10 && Math.abs(pitch2) <= 10 && !rightFound){
+                                    rightFound = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                let newCurveCollisionTest = checkCurveAgainstSingleObstacle(centerCurve, obstacleIndex);
+                if(leftFound && rightFound && newCurveCollisionTest.length === 0){
+                    found = true;
+                    successfulCurve = centerCurve;
+                    let finalCurve = mergeTwoCurves(curve, successfulCurve, curvePivotStart, curvePivotEnd);
+                    drawSpline(splineEntireCurve(finalCurve), colorSelection.VIORED);
+                }
+                // leftFound = false;
+                // rightFound = false;
+                // for (let i = 0; i < curvePivotStart; i++) {
+                //     if(!leftFound){
+                //         for(let j = 0; j < Math.ceil(leftCurve.length / 2); j++){
+                //             let indexBoi = curvePivotStart - i;
+                //             let [yaw1, pitch1] = findChangeInYawPitch(curve[indexBoi - 1], curve[indexBoi], leftCurve[j]);
+                //             let [yaw2, pitch2] = findChangeInYawPitch(curve[i], leftCurve[j], leftCurve[j + 1]);
+                //             console.log(yaw1, pitch1, yaw2, pitch2);
+                //             if(Math.abs(yaw1) <= 10 && Math.abs(pitch1) <= 10 && !leftFound){
+                //                 if(Math.abs(yaw2) <= 10 && Math.abs(pitch2) <= 10 && !leftFound){
+                //                     pathPoints.push(curve[indexBoi - 1]);
+                //                     pathPoints.push(curve[indexBoi]);
+                //                     pathPoints.push(curve[indexBoi]);
+                //                     pathPoints.push(leftCurve[j]);
+                //                     pathPoints.push(leftCurve[j]);
+                //                     pathPoints.push(leftCurve[j + 1]);
+                //                     pathColors.push(colorSelection.SIENNA);
+                //                     pathColors.push(colorSelection.SIENNA);
+                //                     pathColors.push(colorSelection.SIENNA);
+                //                     pathColors.push(colorSelection.SIENNA);
+                //                     pathColors.push(colorSelection.SIENNA);
+                //                     pathColors.push(colorSelection.SIENNA);
+    
+                //                     leftFound = true;
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
+
+                // for(let i=curvePivotStartEnd; i < curve.length - 1; i++){
+                //     if(!rightFound){
+                //         for(let j=leftCurve.length - 1; j > Math.ceil(leftCurve.length / 2); j--){
+                //             let [yaw1, pitch1] = findChangeInYawPitch(leftCurve[j], curve[i], curve[i+1]);
+                //             let [yaw2, pitch2] = findChangeInYawPitch(curve[i], leftCurve[j], leftCurve[j-1]   );
+                //             if(Math.abs(yaw1) <= 10 && Math.abs(pitch1) <= 10 && !rightFound){
+                //                 if(Math.abs(yaw2) <= 10 && Math.abs(pitch2) <= 10 && !rightFound){
+                //                     pathPoints.push(curve[i + 1]);
+                //                     pathPoints.push(curve[i]);
+                //                     pathPoints.push(curve[i]);
+                //                     pathPoints.push(leftCurve[j]);
+                //                     pathPoints.push(leftCurve[j]);
+                //                     pathPoints.push(leftCurve[j + 1]);
+                //                     pathColors.push(colorSelection.GREEN);
+                //                     pathColors.push(colorSelection.GREEN);
+                //                     pathColors.push(colorSelection.GREEN);
+                //                     pathColors.push(colorSelection.GREEN);
+                //                     pathColors.push(colorSelection.GREEN);
+                //                     pathColors.push(colorSelection.GREEN);
+                //                     rightFound = true;
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
+                if(!found){
+                    curvePivotStart = curvePivotStart - 1;
+                    curvePivotEnd = curvePivotEnd + 1;
+                    if (curvePivotStart < 0 || curvePivotEnd > curve.length) {
+                        noPossibility = true;
+                    }
+                }
+            }
+            else {
+                curvePivotStart = curvePivotStart - 1;
+                curvePivotEnd = curvePivotEnd + 1;
+
+                if (curvePivotStart < 0 || curvePivotEnd > curve.length) {
+                    noPossibility = true;
+                }
+            }
+        }  
+    }
+    pathPoints.push(curve[8]);
+    pathPoints.push(curve[9]);
+    pathColors.push(colorSelection.MAROON);
+    pathColors.push(colorSelection.MAROON);
+    pathPoints.push(curve[10]);
+    pathPoints.push(curve[11]);
+    pathColors.push(colorSelection.MAROON);
+    pathColors.push(colorSelection.MAROON);
+
+}
+
+function mergeTwoCurves(curveA, curveB, startIndex, endIndex) {
+    let oddCurve = curveA.slice(0, startIndex);
+    let newCurve = oddCurve.concat(curveB);
+    let finalCurve = newCurve.concat(curveA.slice(endIndex));
+    return finalCurve;
+}
+
+function catMullRomSpline(pointA, pointB, pointC, pointD, alpha) {
+    // https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
+
+    //0 alpha for uniform, centripetal is 0.5, chordal is 1
+    pointA = pointA.slice(0, 3);
+    pointB = pointB.slice(0, 3);
+    pointC = pointC.slice(0, 3);
+    pointD = pointD.slice(0, 3);
+
+    let t0 = 0;
+    let t1 = Math.pow(distance3d(pointA, pointB), alpha) + t0;
+    let t2 = Math.pow(distance3d(pointB, pointC), alpha) + t1;
+    let t3 = Math.pow(distance3d(pointC, pointD), alpha) + t2;
+
+    let numPoints = 100;
+    let increment = (t2 - t1) / numPoints;
+    let A1, A2, A3, B1, B2, C;
+    let catMullPoints = [];
+    for (let t = t1; t < t2; t += increment) {
+        A1 = add(scale(((t1 - t) / (t1 - t0)), pointA), scale(((t - t0) / (t1 - t0)), pointB));
+        A2 = add(scale(((t2 - t) / (t2 - t1)), pointB), scale(((t - t1) / (t2 - t1)), pointC));
+        A3 = add(scale(((t3 - t) / (t3 - t2)), pointC), scale(((t - t2) / (t3 - t2)), pointD));
+        B1 = add(scale(((t2 - t) / (t2 - t0)), A1), scale(((t - t0) / (t2 - t0)), A2));
+        B2 = add(scale(((t3 - t) / (t3 - t1)), A2), scale(((t - t1) / (t3 - t1)), A3));
+        C = add(scale(((t2 - t) / (t2 - t1)), B1), scale(((t - t1) / (t2 - t1)), B2));
+        catMullPoints.push(C);
+    }
+    return catMullPoints;
+}
+
+function drawSpline(spline, color){
+    for (let i = 0; i < spline.length - 1; i++) {
+        pathPoints.push([...spline[i], 1]);
+        pathPoints.push([...spline[i + 1], 1]);
+        pathColors.push(color);
+        pathColors.push(color);
+    }
+}
+
+function checkCurve(curve) {
+    let obstacleCollision;
+    let totalCollision = false;
+    let obstacleIndex;
+    let i, j;
+    let faultPoints = [];
+    for (i = 0; i < obstacles.length; i++) {
+        if (!totalCollision) {
+            for (j = 0; j < curve.length - 1; j++) {
+                obstacleCollision = detectCollisionInObstacle(curve[j], curve[j + 1], i);
+                if (obstacleCollision) {
+                    faultPoints.push(j);
+                    obstacleIndex = i;
+                    totalCollision = true;
+                }
+                else {
+                }
+            }
+        }
+        //Only want to find one obstacle at a time
+    }
+    return [faultPoints, obstacleIndex];
+}
+
+function checkCurveAgainstSingleObstacle(curve, obstacleIndex){
+    let obstacleCollision;
+    let i, j;
+    let faultPoints = [];
+    for (j = 0; j < curve.length - 1; j++) {
+        obstacleCollision = detectCollisionInObstacle(curve[j], curve[j + 1], obstacleIndex);
+        if (obstacleCollision) {
+            faultPoints.push(j);
+            obstacleIndex = i;
+        }
+        else {
+        }
+    }
+    return faultPoints;
+}  
+
+function curveFromYawPitch(distance, deltaYaw, deltaPitch, startPoint, initialDirection, iterations) {
+    let unitDirection = normalize((initialDirection.slice(0, 3)));
+    let point2 = [
+        (unitDirection[0] * distance) + startPoint[0],
+        (unitDirection[1] * distance) + startPoint[1],
+        ((unitDirection[2]) * distance) + startPoint[2],
+        1
+    ];
+    let [yaw, pitch] = findYawPitch(unitDirection);
+    let curvePoints = [[...startPoint, 1], point2];
+    let unitDir, point3;
+    for (let i = 0; i < iterations; i++) {
+        yaw += deltaYaw;
+        pitch += deltaPitch;
+        unitDir = findDirectionVector(yaw, pitch);
+        point3 = [
+            (unitDir[0] * distance) + point2[0],
+            (unitDir[1] * distance) + point2[1],
+            (unitDir[2] * distance) + point2[2],
+            1
+        ];
+        point2 = point3;
+        curvePoints.push(point3);
+    }
+    return curvePoints;
+}
+
+function rotateEntireCurve(yaw, curve) {
+    //Translate to origin
+    //Rotate
+    //Translate back
+    let translatedPoints = [];
+    let finalPoints = [];
+    let midPoint = midPointOfPoints(curve[0], curve[curve.length - 1]);
+    let point;
+    //Center translation
+    for (let i = 0; i < curve.length; i++) {
+        translatedPoints.push(
+            [
+                ...subtract(curve[i].slice(0, 3), midPoint.slice(0, 3)),
+                1
+            ]
+        )
+    }
+
+    //Find pitch, yaw
+    let [currentYaw, currentPitch] = findYawPitch(translatedPoints[translatedPoints.length - 1]);
+
+    //Set up matrices
+    let pitchRotMat = rotateZ(-currentPitch);
+    let yawRotMat = rotateY(-currentYaw)
+    let rotMat = rotateX(yaw);
+    let newYawRotMat = rotateY(currentYaw);
+    let newPitchRotMat = rotateZ(currentPitch);
+
+    translatedPoints.map((curvePoint) => {
+        point = mult(pitchRotMat, curvePoint);
+        point = mult(yawRotMat, point);
+        point = mult(rotMat, point);
+        point = mult(newYawRotMat, point);
+        point = mult(newPitchRotMat, point);
+        point = [...add(point.slice(0, 3), midPoint.slice(0, 3)), 1];
+        finalPoints.push(JSON.parse(JSON.stringify(point)));
+    });
+
+    return finalPoints;
+}
+
+function extendLine3d(pointA, pointB, distance) {
+    // https://answers.unity.com/questions/1139633/extending-a-vector.html
+    let magnitude = distance3d(pointA, pointB);
+    let directionVector = [pointB[0] - pointA[0], pointB[1] - pointA[1], pointB[2] - pointA[2]];
+    let unitDir = [directionVector[0] / magnitude, directionVector[1] / magnitude, directionVector[2] / magnitude];
+    let x = (unitDir[0] * (distance)) + pointB[0];
+    let y = (unitDir[1] * (distance)) + pointB[1];
+    let z = (unitDir[2] * (distance)) + pointB[2];
+    return [x, y, z, 1];
+}
+
+function findYawPitch(pointA) {
+    // https://stackoverflow.com/questions/21622956/how-to-convert-direction-vector-to-euler-angles
+    let unitDir = normalize(pointA.slice(0, 3));
+    let pitch = radToDeg(Math.asin(unitDir[1]));
+    let yaw = radToDeg(Math.atan2(unitDir[2], unitDir[0]));
+    return [yaw, pitch];
+}
+
+function findChangeInYawPitch(pointA, pointB, pointC) {
+    let [yaw1, pitch1] = findYawPitch(subtract(pointB, pointA));
+    let [yaw2, pitch2] = findYawPitch(subtract(pointC, pointB));
+    // if (yaw2 - yaw1 === 180) {
+    //     console.log(
+    //         'Not actually a change'
+    //     )
+    // }
+    return [yaw2 - yaw1, pitch2 - pitch1];
+}
+
+function findDirectionVector(yaw, pitch) {
+    yaw = degToRad(yaw);
+    pitch = degToRad(pitch);
+
+    let x = Math.cos(yaw) * Math.cos(pitch);
+    let y = Math.sin(pitch);
+    let z = Math.sin(yaw) * Math.cos(pitch);
+    return [x, y, z, 1];
+}
+
+
+function midPointOfPoints(pointA, pointB) {
+    let point = add(pointA, pointB);
+    point = scale(0.5, point); //This lets w go back to 1
+    return point;
+}
+
+function showRange(theta, d, pointA, pointB, maxIterations, count) {
+    //theta = degToRad(theta);
+    if (maxIterations === count) {
+        return;
+    }
+    else {
+        //Multiplying the matrices together is O(16);
+        let center = extendLine3d(pointA, pointB, d);
+        let rotPoint = subtract(center, pointB);
+        let left = add(mult(rotateZ(theta), rotPoint), pointB);
+        let right = add(mult(rotateZ(-theta), rotPoint), pointB);
+        let forwards = add(mult(rotateX(theta), rotPoint), pointB);
+        let backwards = add(mult(rotateX(-theta), rotPoint), pointB);
+        pathPoints.push(pointB);
+        pathPoints.push(center);
+        pathColors.push(colorSelection.ROSY);
+        pathColors.push(colorSelection.ROSY);
+        pathPoints.push(pointB);
+        pathPoints.push(left);
+        pathColors.push(colorSelection.TEAL);
+        pathColors.push(colorSelection.TEAL);
+        pathPoints.push(pointB);
+        pathPoints.push(right);
+        pathColors.push(colorSelection.MAROON);
+        pathColors.push(colorSelection.MAROON);
+        pathPoints.push(pointB);
+        pathPoints.push(forwards);
+        pathColors.push(colorSelection.MEDIUM_PURPLE);
+        pathColors.push(colorSelection.MEDIUM_PURPLE);
+        pathPoints.push(pointB);
+        pathPoints.push(backwards);
+        pathColors.push(colorSelection.CORAL);
+        pathColors.push(colorSelection.CORAL);
+        let distance = distance3d(pointB, center);
+        //With recursion it's O(((16*5))^n)
+        showRange(theta, distance, pointB, center, maxIterations, count + 1);
+        showRange(theta, distance, pointB, left, maxIterations, count + 1);
+        showRange(theta, distance, pointB, right, maxIterations, count + 1);
+        showRange(theta, distance, pointB, backwards, maxIterations, count + 1);
+        showRange(theta, distance, pointB, forwards, maxIterations, count + 1);
+    }
+}
+
+function randomizeObstacles(numObstacles) {
+    for (let i = 0; i < numObstacles; i++) {
+        let x = (Math.cos(Math.PI * Math.round(Math.random()))) * Math.random() * 60;
+        let y = (Math.cos(Math.PI * Math.round(Math.random()))) * Math.random() * 60;
+        let z = (Math.cos(Math.PI * Math.round(Math.random()))) * Math.random() * 60;
+        addObstacle(
+            x, y, z, Math.random() * 5)
+    }
 }
 
 function webGLInit() {
@@ -65,68 +530,62 @@ function webGLInit() {
     let projMat = perspective(fovy, 1, .1, 500);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'projectionMatrix'), false, flatten(projMat));
-
-    camPos = vec3(0.0, 0.0, 10.0);
+    camPos = vec3(28.178494562874054, 19.997956366804384, -65.1714409838708);
     camUp = vec3(0.0, 1.0, 0.0);
-    camFront = vec3(0.0, 0.0, -1.0);
+    camFront = vec3( -0.36891547752548215, -0.17364817766693033, 0.9130978484451158);
 
     updateViewMat();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.enable(gl.DEPTH_TEST);
     gl.frontFace(gl.CCW);
-    colorSelection = [
-        vec4(0.941, 0.902, 0.549, 1.0), //khaki
-        vec4(0.627, 0.322, 0.176, 1.0), //sienna
-        vec4(0.502, 0.502, 0.0, 1.0), //olive
-        vec4(0.502, 0.0, 0.502, 1.0), //purple
-        vec4(0.753, 0.753, 0.753, 1.0), //silver
-        vec4(0.502, 0.0, 0.0, 1.0), //maroon
-        vec4(0.0, 0.502, 0.502, 1.0), //teal
-        vec4(0.0, 0.502, 0.0, 1.0), //green
-        vec4(0.941, 0.502, 0.502, 1.0), //coral
-        vec4(0.737, 0.561, 0.561, 1.0), //rosy
-        vec4(1.0, 1.0, 1.0, 1.0), //white
-        vec4(0.439, 0.502, 0.565, 1.0), //slate
-        vec4(0.78, 0.082, 0.522, 1.0),//viored
-        vec4(0.45882, 0.54510, 0.99216, 1.0) //cornflower blue
-    ];
+    gl.lineWidth(5);
 }
 
-
-function addAxis() {
-    pathPoints.push(vec4(-200.0, 0.0, 0.0, 1.0));
-    pathPoints.push(vec4(200.0, 0.0, 0.0, 1.0));
-    pathColors.push(colorSelection[12]);
-    pathColors.push(colorSelection[12]);
-    pathPoints.push(vec4(0.0, -200.0, 0.0, 1.0));
-    pathPoints.push(vec4(0.0, 200.0, 0.0, 1.0));
-    pathColors.push(colorSelection[7]);
-    pathColors.push(colorSelection[7]);
-    pathPoints.push(vec4(0.0, 0.0, -200.0, 1.0));
-    pathPoints.push(vec4(0.0, 0.0, 200.0, 1.0));
-    pathColors.push(colorSelection[13]);
-    pathColors.push(colorSelection[13]);
-}
-
-function detectCollisionInObstacle(a, b) {
-    let obstacleCount = obstacles.length;
-
-    let indexArr = [];
-    for(let i=0; i < obstacleCount; i++){
-        let newStart = i * 36;
-        indexArr.push(...[newStart, newStart + 6, newStart + 12, newStart + 18, newStart + 24, newStart + 30]);
+function addAxis(x, y, z) {
+    if (x) {
+        pathPoints.push(vec4(-200.0, 0.0, 0.0, 1.0));
+        pathPoints.push(vec4(200.0, 0.0, 0.0, 1.0));
+        pathColors.push(colorSelection.VIORED);
+        pathColors.push(colorSelection.VIORED);
     }
+    if (y) {
+        pathPoints.push(vec4(0.0, -200.0, 0.0, 1.0));
+        pathPoints.push(vec4(0.0, 200.0, 0.0, 1.0));
+        pathColors.push(colorSelection.GREEN);
+        pathColors.push(colorSelection.GREEN);
+    }
+    if (z) {
+        pathPoints.push(vec4(0.0, 0.0, -200.0, 1.0));
+        pathPoints.push(vec4(0.0, 0.0, 200.0, 1.0));
+        pathColors.push(colorSelection.CORNFLOWER_BLUE);
+        pathColors.push(colorSelection.CORNFLOWER_BLUE);
+    }
+}
+
+function detectCollisionInObstacle(a, b, obstacleIndex) {
+    let collisionDetected = false;
+    let indexArr = [];
     let triangles = [];
+    let obstacleStart = obstacleIndex * 36;
+    indexArr = [obstacleStart, obstacleStart + 6, obstacleStart + 12, obstacleStart + 18, obstacleStart + 24, obstacleStart + 30];
     indexArr.map((i) => {
         triangles.push([obstaclePoints[i], obstaclePoints[i + 1], obstaclePoints[i + 2]]);
     })
     triangles.map(triangle => {
-        // console.log(triangle);
-        collisionDetection(a,b,triangle[0], triangle[1], triangle[2]);    
+        if (collisionDetected) {
+
+        }
+        else {
+            collisionDetected = collisionDetection(a, b, triangle[0], triangle[1], triangle[2]);
+        }
     })
+    return collisionDetected;
 }
 
+//NOT DONE
 function initiatePathing(start, end, theta) {
     let distance = distance3d(start, end);
     let maxRadius = Math.sqrt(segDist * segDist / (1 - Math.cos(degToRad(theta))));
@@ -145,6 +604,11 @@ function initiatePathing(start, end, theta) {
     }
 }
 
+function idealDistance(radius, theta) {
+    let newDist = Math.sqrt(2 * radius * radius * (1 - Math.cos(degToRad(theta))));
+    return newDist;
+};
+
 function constructCurve(theta, distance, iterations, xstart, ystart, zstart) {
     let curvePoints = [];
     let x1, y1;
@@ -152,47 +616,36 @@ function constructCurve(theta, distance, iterations, xstart, ystart, zstart) {
     x1 = xstart;
     y1 = ystart;
     x2 = xstart;
-    y2 = ystart + distance;
-    curvePoints.push(vec4(x1, y1, zstart, 1.0));
-    curvePoints.push(vec4(x2, y2, zstart, 1.0));
-    pathColors.push(colorSelection[9]);
-    pathColors.push(colorSelection[10]);
+    y2 = ystart - distance;
+
+    curvePoints.push([x1, y1, zstart, 1]);
+    curvePoints.push([x2, y2, zstart, 1]);
     let tempX, tempY;
     for (let i = 0; i < iterations; i++) {
         [tempX, tempY] = findNextPointOnCurve(theta, distance, x1, y1, x2, y2);
+        curvePoints.push([tempX, tempY, zstart, 1]);
         x1 = x2;
         y1 = y2;
         x2 = tempX;
         y2 = tempY;
-        curvePoints.push(vec4(x1, y1, zstart, 1.0));
-        curvePoints.push(vec4(x2, y2, zstart, 1.0));
-        pathColors.push(colorSelection[9]);
-        pathColors.push(colorSelection[10]);
     }
-    let rotMat = rotateX(45);
-    let scaleMat = scalem(0.5, 0.5, 0.5);
-    let transMat = translate(-1, 0, 0);
+    return curvePoints;
+}
 
-    let newPoints = curvePoints;
-    // newPoints = newPoints.map((point) => {
-    //     return mult(scaleMat, point);
-    // })
-    newPoints = newPoints.map((point) => {
-        return mult(rotMat, point);
-    })
-    // newPoints = newPoints.map((point) => {
-    //     return mult(transMat, point);
-    // })
-    let testPoints = newPoints.slice(3, 9);
-    projectToXY(testPoints[0], testPoints[2], testPoints[4]);
-    pathPoints.push(...newPoints);
+function drawCurve(index, color) {
+    let path = curves[index];
+    for (let i = 0; i < path.length - 1; i++) {
+        pathPoints.push(path[i]);
+        pathPoints.push(path[i + 1]);
+        pathColors.push(color);
+        pathColors.push(color);
+    }
 }
 
 function findNextPointOnCurve(theta, distance, x0, y0, x1, y1) {
     if (x0 !== x1 || y0 !== y1) {
         //First find the next point on the line defined by P0 and P1
         let [x2, y2] = extendLine(x0, y0, x1, y1, distance);
-
         //Apply a rotation to P3 based on theta
         let thetaRads = degToRad(theta);
         //Need to rotate about P1
@@ -204,49 +657,27 @@ function findNextPointOnCurve(theta, distance, x0, y0, x1, y1) {
         let x2RT = x2r + x1;
         let y2RT = y2r + y1;
 
-        angleBetweenTwoPoints(x2P, y2P, x2r, y2r);
+        //angleBetweenTwoPoints(x2P, y2P, x2r, y2r);
 
         return [x2RT, y2RT];
     }
     else {
         throw console.error("Cannot make a line segment from those points, they are the same.");
     }
-
-}
-
-/**Curves can be generated with 12 cases. This stores a curve's important information
- * @param Direction is the axis the curve is moving along([x,y,z])
- * @param Translation is the movement from the origin to a point in space ([x,y,z])
- * @param Rotation is the degrees the curve is rotated around that axis. 0 is the negative of the axis (-90, 0, 90, 180)
- * @param Points are the line segments composing the curve.
- * A point's orientation can be determined by 
- */
-function curve(direction, translation, rotation, points) {
-    this.direction = direction;
-    this.translation = translation;
-    this.rotation = rotation;
-    this.points = points;
 }
 
 function collisionDetection(a, b, p, q, r) {
     //P Q R is always clockwise
     //So use P - Q + R
 
-    // console.log('POINTS');
-    // console.log(a, b);
-    // console.log('PLANE');
-    // console.log(p, q, r)
     let line1 = [subtract(a.slice(0, 3), b.slice(0, 3)), cross(a.slice(0, 3), b.slice(0, 3))];
     let plane = findPlaneCoefficients(p, q, r);
-    // console.log('collision')
-    // console.log(plane);
+
     let intersection = subtract(cross(line1[1], plane.slice(0, 3)), scale(plane[3], line1[0]));
     let homogenousIntersection = dot(plane.slice(0, 3), line1[0]);
-    // console.log(intersection);
-    // console.log(homogenousIntersection);
+
     let finalIntersection = [intersection[0] / homogenousIntersection, intersection[1] / homogenousIntersection, intersection[2] / homogenousIntersection];
-    // console.log("Final Intersection");
-    // console.log(finalIntersection);
+
 
     let aZero = testAgainstZero(plane[0]);
     let bZero = testAgainstZero(plane[1]);
@@ -257,9 +688,6 @@ function collisionDetection(a, b, p, q, r) {
         p[1] - q[1] + r[1],
         p[2] - q[2] + r[2]
     ];
-    // console.log('s');
-    // console.log(s);
-    // console.log('min max tests');
     // Fetch max and min values
     let xMin = Math.min(p[0], q[0], r[0], s[0]);
     let xMax = Math.max(p[0], q[0], r[0], s[0]);
@@ -267,53 +695,67 @@ function collisionDetection(a, b, p, q, r) {
     let yMax = Math.max(p[1], q[1], r[1], s[1]);
     let zMin = Math.min(p[2], q[2], r[2], s[2]);
     let zMax = Math.max(p[2], q[2], r[2], s[2]);
-    let inRange;
-    // console.log('Min Max Tests')
-    // console.log(xMin, xMax, yMin, yMax, zMin, zMax);
+    let inRange = false;
 
     let xInRange = (xMin <= finalIntersection[0]) && (xMax >= finalIntersection[0]);
     let yInRange = yMin <= finalIntersection[1] && yMax >= finalIntersection[1];
     let zInRange = zMin <= finalIntersection[2] && zMax >= finalIntersection[2];
-    // console.log('Range tests');
-    // console.log(xInRange,yInRange,zInRange);
-    // console.log('Not tests');
-    // console.log(aZero, bZero, cZero);
     //CASE 1 x,y,z
     if (!aZero && !bZero && !cZero) {
-        console.log('1 - x,y,z')
         inRange = xInRange && yInRange;
     }
     //CASE 2 y,z
     else if (aZero && !bZero && !cZero) {
-        console.log('2 - y,z')
         inRange = xInRange && yInRange;
     }
     //CASE 3 x,z
     else if (!aZero && bZero && !cZero) {
-        console.log('3 - x,z');
         inRange = xInRange && yInRange;
     }
     //CASE 4 x,y
     else if (!aZero && !bZero && cZero) {
-        console.log('4 - x,y');
         inRange = xInRange && yInRange && zInRange;
     }
     //CASE 5 x
     else if (!aZero && bZero && cZero) {
-        console.log('5 - x');
         inRange = yInRange && zInRange;
     }
     //CASE 6 y
     else if (aZero && !bZero && cZero) {
-        console.log('6 - y');
         inRange = xInRange && zInRange;
     }
     //CASE 7 z
     else if (aZero && bZero && !cZero) {
-        console.log('7 - z');
         inRange = xInRange && yInRange;
     }
-    console.log(inRange);
+    if (inRange) {
+        let ab = subtract(b.slice(0, 3), a.slice(0, 3));
+        let ac = subtract(finalIntersection, a.slice(0, 3));
+        let crossProduct = cross(ab, ac);
+        let crossMagnitude = length(crossProduct);
+        if (testAgainstZero(crossMagnitude)) {
+            //Is Zero
+            let dotAbAc = dot(ab, ac);
+            if (dotAbAc < 0) {
+                return false;
+            }
+            else {
+                let abDist = distance3d(a.slice(0, 3), b.slice(0, 3));
+                abDist = abDist * abDist;
+                if (abDist < dotAbAc) {
+                    return false
+                }
+                else {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    //Need to check if intersection point is inbetween the points themselves
+    //https://stackoverflow.com/questions/328107/how-can-you-determine-a-point-is-between-two-other-points-on-a-line-segment
+
+    return false;
 }
 
 function testAgainstZero(val) {
@@ -321,9 +763,7 @@ function testAgainstZero(val) {
 }
 
 /**Calculates a third point a distance (d) down the line determined by the first two points
- * Note: Since the determination of the third x coordinate is done with the quadratic equation, 
- * we have +/- d to find the new x coordinate. If the line is oriented towards Q1 or Q4, then we
- * use +d, otherwise -d
+ * It is created by multiplying the components of the unit vector by the distance, and then adding the second point
  * @param {float} x0 
  * @param {float} y0 
  * @param {float} x1 
@@ -332,65 +772,9 @@ function testAgainstZero(val) {
  * @returns [x2,y2]
  */
 function extendLine(x0, y0, x1, y1, d) {
-
-    //These shortcut operations in case the slope is 0 or undefined
-    //Vertical line, slope is infinity
-    if (x1.toFixed(3) === x0.toFixed(3)) {
-
-        if (y1 > y0) {
-            //Moving +y
-            return [x1, y1 + d];
-        }
-        else {
-            //Moving -y
-            return [x1, y1 - d];
-        }
-    }
-
-    //No slope
-    if (y1.toFixed(3) === y0.toFixed(3)) {
-        if (x1 > x0) {
-            //Moving +x
-            return [x1 + d, y1];
-        }
-        else {
-            //Moving -x
-            return [x1 - d, y1];
-        }
-    }
-
-    let x2, y2, m;
-
-    let isQ1orQ4 = false;
-    if (x1 - x0 > 0) {
-        isQ1orQ4 = true;
-    }
-
-    m = (y1 - y0) / (x1 - x0);
-
-    if (isQ1orQ4) {
-        x2 = (x1 + (Math.pow(m, 2) * x1) + (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2));
-        y2 = (m * (x2 - x1) + y1);
-
-        if (testMode) {
-            console.log(
-                `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
-            The previous points are x0: ${x0}, y0: ${y0}, x1: ${x1}, y1: ${y1}, and the distance is ${d}.`
-            );
-        }
-
-        return [x2, y2];
-    }
-
-    x2 = (x1 + (Math.pow(m, 2) * x1) - (d * Math.sqrt(Math.pow(m, 2) + 1))) / (1 + Math.pow(m, 2))
-    y2 = (m * (x2 - x1) + y1);
-
-    if (testMode) {
-        console.log(
-            `The new coordinate in the direction of Quadrant 1 or 3 are x: ${x2}, y: ${y2}.\r
-        The previous points are x0: ${x0}, y0: ${y0}, x1: ${x1}, y1: ${y1}, and the distance is ${d}.`
-        );
-    }
+    let unit = normalize([x1 - x0, y1 - y0]);
+    let x2 = (unit[0] * d) + x1;
+    let y2 = (unit[1] * d) + y1;
     return [x2, y2];
 }
 
@@ -407,8 +791,7 @@ function idealRadius(count, segDist) {
     return radius
 }
 
-
-/**A helper function to calculate distances between points. It deep copies the points to avoid trashing an array
+/**A helper function to calculate distances between points.
  * @param {*} xi
  * @param {*} yi 
  * @param {*} xf 
@@ -416,15 +799,7 @@ function idealRadius(count, segDist) {
  * @returns distance
  */
 function distance(xi, yi, xf, yf) {
-    xfDeep = JSON.parse(JSON.stringify({ val: xf })).val;
-    yfDeep = JSON.parse(JSON.stringify({ val: yf })).val;
-    xiDeep = JSON.parse(JSON.stringify({ val: xi })).val;
-    yiDeep = JSON.parse(JSON.stringify({ val: yi })).val;
-    let distance = Math.sqrt(Math.pow(xfDeep - xiDeep, 2) + Math.pow(yfDeep - yiDeep, 2));
-    if (testMode) {
-        console.log(`Distance between point (${xf}, ${yf}) and ( ${xi}, ${yi}) is ${distance}`);
-    }
-    return distance;
+    return Math.sqrt(Math.pow(xf - xi, 2) + Math.pow(yf - yi, 2));
 }
 
 function distance3d(p, q) {
@@ -497,7 +872,6 @@ function apply2dRotation(x, y, theta) {
  * @returns the array [a,b,c,d]
  */
 function findPlaneCoefficients(p, q, r) {
-
     if (p.length < 3 || q.length < 3 || r.length < 3) {
         throw err;
     }
@@ -523,17 +897,10 @@ function projectToXY(p, q, r) {
     Y = normalize(Y);
     let Z = cross(X, Y);
     Y = cross(Z, X)
-    let lookie = lookAt([q[0], q[1], q[2]], add([q[0], q[1], q[2]], Z), Y);
-    let vec1Res = mult(lookie, p);
-    let vec2Res = mult(lookie, q);
-    let vec3Res = mult(lookie, r);
-
-    // console.log(distance3d(vec1Res, vec2Res));
-    // console.log(distance3d(p,q));
-    // console.log(distance3d(vec1Res, vec3Res));
-    // console.log(distance3d(p,r));
-    // console.log(distance3d(vec2Res, vec3Res));
-    // console.log(distance3d(r,q));
+    let lookMat = lookAt([q[0], q[1], q[2]], add([q[0], q[1], q[2]], Z), Y);
+    let vec1Res = mult(lookMat, p);
+    let vec2Res = mult(lookMat, q);
+    let vec3Res = mult(lookMat, r);
 
     return [vec1Res, vec2Res, vec3Res];
 }
@@ -587,7 +954,7 @@ function render() {
 }
 
 //For now render obstacles as boxes
-function addObstacle(x, y, z, s) {
+function addObstacle(x, y, z, s, colors) {
     obstacles.push([x, y, z, s]);
     let r = s / 2;
     let minY = y - r;
@@ -597,6 +964,19 @@ function addObstacle(x, y, z, s) {
     let minZ = z - r;
     let maxZ = z + r;
 
+    let obstacleColor1;
+    let obstacleColor2;
+    let obstacleColor3;
+    if (colors && colors.length === 3) {
+        obstacleColor1 = colors[0];
+        obstacleColor2 = colors[1];
+        obstacleColor3 = colors[2];
+    }
+    else {
+        obstacleColor1 = colorSelection.OBJECT_TRANSLUSCENT;
+        obstacleColor2 = colorSelection.OBJECT_TRANSLUSCENT;
+        obstacleColor3 = colorSelection.OBJECT_TRANSLUSCENT;
+    }
     let topBackLeft = vec4(minX, maxY, minZ, 1.0);
     let topBackRight = vec4(maxX, maxY, minZ, 1.0);
     let topFrontLeft = vec4(minX, maxY, maxZ, 1.0);
@@ -616,12 +996,12 @@ function addObstacle(x, y, z, s) {
     obstaclePoints.push(topBackRight);
     obstaclePoints.push(topBackLeft);
 
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[6]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[6]);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor2);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor2);
 
 
     //Bottom Face
@@ -632,12 +1012,12 @@ function addObstacle(x, y, z, s) {
     obstaclePoints.push(bottomBackRight);
     obstaclePoints.push(bottomBackLeft);
 
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[6]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[6]);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor2);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor2);
 
     //Front Face
 
@@ -648,12 +1028,12 @@ function addObstacle(x, y, z, s) {
     obstaclePoints.push(topFrontRight);
     obstaclePoints.push(bottomFrontRight);
 
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[6]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[6]);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor2);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor2);
 
     //Back Face
 
@@ -664,12 +1044,12 @@ function addObstacle(x, y, z, s) {
     obstaclePoints.push(topBackRight);
     obstaclePoints.push(bottomBackRight);
 
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[6]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[6]);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor2);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor2);
 
     //Right Face
 
@@ -680,12 +1060,12 @@ function addObstacle(x, y, z, s) {
     obstaclePoints.push(topBackRight);
     obstaclePoints.push(bottomBackRight);
 
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[6]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[6]);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor2);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor2);
 
     //Left Face
 
@@ -696,12 +1076,12 @@ function addObstacle(x, y, z, s) {
     obstaclePoints.push(topBackLeft);
     obstaclePoints.push(topFrontLeft);
 
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[6]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[5]);
-    obstacleColors.push(colorSelection[8]);
-    obstacleColors.push(colorSelection[6]);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor2);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor1);
+    obstacleColors.push(obstacleColor3);
+    obstacleColors.push(obstacleColor2);
 }
 
 
@@ -711,8 +1091,6 @@ function curveAroundObstacle(index) {
         let arcR = obstacle[3] * Math.sqrt(2) / 2;
         let xStart = obstacle[0] - arcR;
         let dynamicDistance = Math.sqrt(2 * arcR * arcR * (1 - Math.cos(degToRad(20))));
-        console.log('=====dynamic distance=====');
-        console.log(dynamicDistance);
         constructCurve(20, dynamicDistance, 9, xStart, obstacle[1], obstacle[2]);
     }
     else {
@@ -721,7 +1099,6 @@ function curveAroundObstacle(index) {
 }
 
 /** CAMERA FUNCTIONS **/
-
 
 /**
  * Simply adds a listener for key inputs to the window
@@ -831,7 +1208,6 @@ function moveCamera(event) {
     draw();
 }
 
-
 /**
  * Takes the global camera position, camera direction, and camera up vector
  * and generates a new view matrix, and then plugs it into the graphics pipeline
@@ -839,48 +1215,4 @@ function moveCamera(event) {
 function updateViewMat() {
     let viewMat = lookAt(camPos, add(camFront, camPos), camUp);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'viewMatrix'), false, flatten(viewMat));
-}
-
-/**Not using traditional unit tests, but we call this function to do some general tests
- * 
- */
-function testAngleBetweenTwoPoints() {
-    console.log("===TESTING===");
-
-    //90 degree rotation
-    let test1 = 90;
-    if (angleBetweenTwoPoints(1, 1, -1, 1, true) === test1) {
-        console.log('PASSED');
-    }
-    else {
-        console.log('FAILED');
-    }
-
-    //270 degree rotation
-    let test2 = -90;
-    if (angleBetweenTwoPoints(1, 1, 1, -1, true) === test2) {
-        console.log('PASSED');
-    }
-    else {
-        console.log('FAILED');
-    }
-
-    //45 degree rotation
-    let test3 = 45;
-    console.log("Test 3");
-    if (angleBetweenTwoPoints(1, 1, 0, Math.sqrt(2), true) === test3) {
-        console.log('PASSED');
-    }
-    else {
-        console.log('FAILED');
-    }
-
-    let test4 = 100;
-    console.log('Test 4');
-    if (angleBetweenTwoPoints(1, 1, 0.5, 1, true) !== test4) {
-        console.log('PASSED');
-    }
-    else {
-        console.log('FAILED');
-    }
 }

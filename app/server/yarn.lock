@@ -173,7 +173,7 @@
   dependencies:
     "@babel/runtime" "^7.7.2"
     "@jimp/utils" "^0.9.3"
-    core-js "^3.4.1"
+    core-js "^3.4.1"This module is the guts of optimist's argument parser without all the fanciful decoration.
 
 "@jimp/plugin-normalize@^0.9.3":
   version "0.9.3"
@@ -947,10 +947,6 @@ min-document@^2.19.0:
   dependencies:
     dom-walk "^0.1.0"
 
-minimist@0.0.8:
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d"
-  integrity sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=
 
 minimist@^1.2.0:
   version "1.2.0"
