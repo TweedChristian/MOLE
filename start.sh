@@ -16,6 +16,6 @@ do
         kill $NODE_PID
         kill $PYTHON_PID
     else 
-    echo "pp"
+    echo "Not a command"
 fi
 done
